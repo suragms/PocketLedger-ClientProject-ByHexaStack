@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, useBlocker, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import ReceiptUpload from '../../components/transactions/ReceiptUpload';
+import { useNavigationGuard } from '../../hooks/useNavigationGuard';
 import { TRANSACTION_TYPES, PAYMENT_METHODS } from '../../lib/constants';
 import toast from 'react-hot-toast';
 import type { Transaction } from '../../types';
@@ -70,12 +71,7 @@ export default function TransactionFormPage() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [isDirty]);
 
-  useBlocker(
-    useCallback(() => {
-      if (!isDirty) return false;
-      return !window.confirm('You have unsaved changes. Are you sure you want to leave?');
-    }, [isDirty])
-  );
+  const { guardedNavigate } = useNavigationGuard(isDirty);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -128,10 +124,10 @@ export default function TransactionFormPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">{isEdit ? 'Edit Transaction' : 'New Transaction'}</h1>
+      <h1 className="text-xl md:text-3xl font-bold">{isEdit ? 'Edit Transaction' : 'New Transaction'}</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           <form className="space-y-6">
             {/* Type Selection */}
             <div>
@@ -156,14 +152,14 @@ export default function TransactionFormPage() {
             </div>
 
             {/* Date & Payment Method */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Date" type="date" error={errors.date?.message} {...register('date')} />
               <Select label="Payment Method" options={PAYMENT_METHODS.map((p) => ({ value: p.value, label: p.label }))}
                 error={errors.paymentMethod?.message} {...register('paymentMethod', { valueAsNumber: true })} />
             </div>
 
             {/* Account & Category */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select label="Account" placeholder="Select account"
                 options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
                 error={errors.accountId?.message} {...register('accountId', { valueAsNumber: true })} />
@@ -173,7 +169,7 @@ export default function TransactionFormPage() {
             </div>
 
             {/* Payee & Reference */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input label="Payee" placeholder="Who was this paid to?" {...register('payee')} />
               <Input label="Reference" placeholder="Invoice #, receipt #" {...register('reference')} />
             </div>
@@ -187,18 +183,19 @@ export default function TransactionFormPage() {
             )}
 
             {/* Actions */}
-            <div className="flex gap-4 pt-2">
-              <Button type="submit" loading={mutation.isPending} className="flex-1"
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Button type="submit" loading={mutation.isPending} className="w-full sm:flex-1"
                 onClick={handleSubmit(onSubmit)}>
                 {isEdit ? 'Update' : 'Create'} Transaction
               </Button>
               {!isEdit && (
                 <Button type="button" variant="secondary" loading={createAnotherMutation.isPending}
-                  onClick={handleSubmit(onSubmitAddAnother)}>
+                  onClick={handleSubmit(onSubmitAddAnother)} className="w-full sm:flex-1">
                   Save & Add Another
                 </Button>
               )}
-              <Button type="button" variant="outline" onClick={() => navigate('/transactions')}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => guardedNavigate('/transactions')}
+                className="w-full sm:w-auto">Cancel</Button>
             </div>
           </form>
         </CardContent>

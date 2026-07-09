@@ -340,7 +340,7 @@ export default function SettingsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-5xl">
-      <h1 className="text-3xl font-bold">Settings</h1>
+      <h1 className="text-xl md:text-3xl font-bold">Settings</h1>
 
       <div className={isDesktop ? 'flex gap-8' : ''}>
         {/* Desktop Sidebar Navigation */}
@@ -403,14 +403,14 @@ export default function SettingsPage() {
                   <CardTitle>Profile Photo</CardTitle>
                   <CardDescription>Upload a profile picture</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-6">
-                    <div className="relative group">
-                      <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                    <div className="relative group shrink-0">
+                      <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                         {profile?.avatarUrl ? (
                           <img src={profile.avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                         ) : (
-                          <UserCircleIcon className="h-16 w-16 text-muted-foreground" />
+                          <UserCircleIcon className="h-14 w-14 sm:h-16 sm:w-16 text-muted-foreground" />
                         )}
                       </div>
                       <button
@@ -446,8 +446,8 @@ export default function SettingsPage() {
                   <CardTitle>Personal Information</CardTitle>
                   <CardDescription>Update your name and default currency</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <form onSubmit={profileForm.handleSubmit((d) => updateProfileMutation.mutate(d))} className="space-y-4">
+                <CardContent className="p-4 md:p-6">
+                  <form id="profile-form" onSubmit={profileForm.handleSubmit((d) => updateProfileMutation.mutate(d))} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input label="First Name" error={profileForm.formState.errors.firstName?.message} {...profileForm.register('firstName')} />
                       <Input label="Last Name" error={profileForm.formState.errors.lastName?.message} {...profileForm.register('lastName')} />
@@ -467,10 +467,19 @@ export default function SettingsPage() {
                     <p className="text-xs text-muted-foreground">
                       Member since {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}
                     </p>
-                    <Button type="submit" loading={updateProfileMutation.isPending}>Save Changes</Button>
+                    <Button type="submit" className="hidden sm:inline-flex w-full sm:w-auto" loading={updateProfileMutation.isPending}>Save Changes</Button>
                   </form>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {/* Mobile fixed save bar */}
+          {activeTab === 'profile' && !isDesktop && (
+            <div className="fixed bottom-[68px] left-0 right-0 z-[51] border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] shadow-lg">
+              <div className="max-w-5xl mx-auto">
+                <Button type="submit" form="profile-form" className="w-full" loading={updateProfileMutation.isPending}>Save Changes</Button>
+              </div>
             </div>
           )}
 
@@ -483,8 +492,8 @@ export default function SettingsPage() {
                   <CardTitle>Theme</CardTitle>
                   <CardDescription>Choose your preferred appearance</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-3">
+                <CardContent className="p-4 md:p-6">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     {THEME_OPTIONS.map((option) => {
                       const Icon = THEME_ICONS[option.value];
                       const isActive = themeMode === option.value;
@@ -498,14 +507,14 @@ export default function SettingsPage() {
                               currency: settings?.currency || 'USD',
                             });
                           }}
-                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+                          className={`flex flex-col items-center gap-2 p-3 sm:p-4 rounded-xl border-2 transition-all ${
                             isActive
                               ? 'border-primary bg-primary/5'
                               : 'border-muted hover:border-primary/50'
                           }`}
                         >
-                          <Icon className={`h-8 w-8 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                          <span className={`text-sm font-medium ${isActive ? 'text-primary' : ''}`}>{option.label}</span>
+                          <Icon className={`h-6 w-6 sm:h-8 sm:w-8 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className={`text-xs sm:text-sm font-medium ${isActive ? 'text-primary' : ''}`}>{option.label}</span>
                         </button>
                       );
                     })}
@@ -521,7 +530,7 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Set your preferred display currency</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   <select
                     className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
                     value={settings?.currency || 'USD'}
@@ -548,7 +557,7 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Select your preferred language</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   <select
                     className="flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm"
                     value={settings?.language || 'en'}
@@ -580,8 +589,8 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Change your account password</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border">
                     <div>
                       <p className="font-medium">Password</p>
                       <p className="text-sm text-muted-foreground">Last changed: Unknown</p>
@@ -599,12 +608,12 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Manage your passkeys for passwordless login</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-4 md:p-6 space-y-3">
                   {passkeys.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No passkeys configured</p>
                   ) : (
                     passkeys.map((pk: Passkey) => (
-                      <div key={pk.id} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div key={pk.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 rounded-lg border">
                         <div>
                           <p className="font-medium">{pk.name}</p>
                           <p className="text-xs text-muted-foreground">
@@ -629,14 +638,15 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Quick login with a 4-digit PIN</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border">
                     <div>
                       <p className="font-medium">PIN</p>
                       <p className="text-sm text-muted-foreground">
                         {user?.pinEnabled ? 'PIN is enabled' : 'Set up a 4-digit PIN for quick login'}
                       </p>
                     </div>
+                    <div className="shrink-0">
                     {user?.pinEnabled ? (
                       <Button variant="destructive" size="sm" onClick={() => {
                         const password = prompt('Enter your password to remove PIN:');
@@ -645,6 +655,7 @@ export default function SettingsPage() {
                     ) : (
                       <Button variant="outline" size="sm" onClick={() => setShowSetPin(true)}>Set Up</Button>
                     )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -657,8 +668,8 @@ export default function SettingsPage() {
                   </CardTitle>
                   <CardDescription>Add an extra layer of security to your account</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-3 rounded-lg border">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-lg border">
                     <div>
                       <p className="font-medium">2FA</p>
                       <p className="text-sm text-muted-foreground">
@@ -667,11 +678,13 @@ export default function SettingsPage() {
                           : 'Not enabled'}
                       </p>
                     </div>
+                    <div className="shrink-0">
                     {twoFAStatus?.isEnabled ? (
                       <Button variant="destructive" size="sm" onClick={() => setShowDisable2FA(true)}>Disable</Button>
                     ) : (
                       <Button variant="outline" size="sm" onClick={() => setShowEnable2FA(true)}>Enable</Button>
                     )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -686,7 +699,7 @@ export default function SettingsPage() {
                   <CardTitle>Email Notifications</CardTitle>
                   <CardDescription>Manage your email notification preferences</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-4 md:p-6 space-y-4">
                   {[
                     { key: 'emailNotifications' as const, label: 'Email notifications', desc: 'Receive notifications via email' },
                     { key: 'pushNotifications' as const, label: 'Push notifications', desc: 'Receive browser push notifications' },
@@ -694,12 +707,12 @@ export default function SettingsPage() {
                     { key: 'weeklyReport' as const, label: 'Weekly report', desc: 'Receive a weekly financial summary' },
                     { key: 'monthlyReport' as const, label: 'Monthly report', desc: 'Receive a monthly financial summary' },
                   ].map((item) => (
-                    <label key={item.key} className="flex items-center justify-between p-3 rounded-lg border cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <EnvelopeIcon className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{item.label}</p>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    <label key={item.key} className="flex items-center justify-between gap-2 p-3 rounded-lg border cursor-pointer">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <EnvelopeIcon className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{item.label}</p>
+                          <p className="text-sm text-muted-foreground truncate">{item.desc}</p>
                         </div>
                       </div>
                       <button
@@ -739,18 +752,18 @@ export default function SettingsPage() {
                   <CardTitle>Privacy</CardTitle>
                   <CardDescription>Control what others can see</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-4 md:p-6 space-y-4">
                   {[
                     { key: 'showBalance' as const, label: 'Show balance', desc: 'Display your account balance', icon: EyeIcon },
                     { key: 'showTransactions' as const, label: 'Show transactions', desc: 'Display transaction details', icon: EyeIcon },
                     { key: 'publicProfile' as const, label: 'Public profile', desc: 'Make your profile visible to others', icon: UserCircleIcon },
                   ].map((item) => (
-                    <label key={item.key} className="flex items-center justify-between p-3 rounded-lg border cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{item.label}</p>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    <label key={item.key} className="flex items-center justify-between gap-2 p-3 rounded-lg border cursor-pointer">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <item.icon className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{item.label}</p>
+                          <p className="text-sm text-muted-foreground truncate">{item.desc}</p>
                         </div>
                       </div>
                       <button
@@ -778,8 +791,8 @@ export default function SettingsPage() {
                   <CardTitle>Export Data</CardTitle>
                   <CardDescription>Download all your data as a JSON file</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Button variant="outline" onClick={() => exportMutation.mutate()} loading={exportMutation.isPending}>
+                <CardContent className="p-4 md:p-6">
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={() => exportMutation.mutate()} loading={exportMutation.isPending}>
                     <DocumentArrowDownIcon className="h-4 w-4 mr-1.5" />Export All Data
                   </Button>
                 </CardContent>
@@ -791,8 +804,8 @@ export default function SettingsPage() {
                   <CardTitle>Import Data</CardTitle>
                   <CardDescription>Restore data from a backup file</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Button variant="outline" onClick={() => importInputRef.current?.click()}>
+                <CardContent className="p-4 md:p-6">
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={() => importInputRef.current?.click()}>
                     <DocumentArrowUpIcon className="h-4 w-4 mr-1.5" />Import Data
                   </Button>
                   <input
@@ -814,13 +827,13 @@ export default function SettingsPage() {
                   <CardTitle className="text-destructive">Danger Zone</CardTitle>
                   <CardDescription>Irreversible actions</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div>
                       <p className="font-medium">Delete Account</p>
                       <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                     </div>
-                    <Button variant="destructive" size="sm" onClick={() => setShowDeleteAccount(true)}>
+                    <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => setShowDeleteAccount(true)}>
                       <TrashIcon className="h-4 w-4 mr-1" />Delete
                     </Button>
                   </div>
@@ -833,13 +846,13 @@ export default function SettingsPage() {
           {activeTab === 'about' && (
             <div className="space-y-6">
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="p-4 md:p-6">
                   <div className="text-center space-y-4">
-                    <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                      <span className="text-3xl font-bold text-primary">PL</span>
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                      <span className="text-2xl sm:text-3xl font-bold text-primary">PL</span>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold">{about?.appName || 'PocketLedger'}</h2>
+                      <h2 className="text-lg sm:text-2xl font-bold">{about?.appName || 'PocketLedger'}</h2>
                       <p className="text-muted-foreground">Version {about?.version || '1.0.0'}</p>
                     </div>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -853,7 +866,7 @@ export default function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Features</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {(about?.features || []).map((feature, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm">
@@ -869,7 +882,7 @@ export default function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Legal</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="p-4 md:p-6 space-y-3">
                   <a href="/privacy" className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                     <span className="font-medium">Privacy Policy</span>
                     <span className="text-muted-foreground">→</span>
@@ -885,12 +898,12 @@ export default function SettingsPage() {
                 <CardHeader>
                   <CardTitle>Licenses</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 md:p-6">
                   <div className="space-y-2">
                     {(about?.licenses || []).map((lic, i) => (
-                      <div key={i} className="flex items-center justify-between text-sm p-2 rounded-lg">
+                      <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm gap-1 p-2 rounded-lg">
                         <span className="font-medium">{lic.name}</span>
-                        <span className="text-muted-foreground">{lic.license} · {lic.copyright}</span>
+                        <span className="text-muted-foreground text-xs sm:text-sm">{lic.license} · {lic.copyright}</span>
                       </div>
                     ))}
                   </div>
