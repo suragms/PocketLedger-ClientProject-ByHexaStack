@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate, useBlocker, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,8 +20,11 @@ export default function TransactionFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const isEdit = !!id;
   const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const initialType = searchParams.get('type') ? Number(searchParams.get('type')) : 1;
 
   const { data: existing, isLoading: loadingExisting } = useQuery({
     queryKey: ['transaction', id],
@@ -32,10 +35,16 @@ export default function TransactionFormPage() {
   const { data: accountsData } = useQuery({ queryKey: ['accounts-dropdown'], queryFn: () => accountsApi.getAll({ page: 1, pageSize: 100 }) });
   const { data: categoriesData } = useQuery({ queryKey: ['categories-dropdown'], queryFn: () => categoriesApi.getAll() });
 
-  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors, dirtyFields } } = useForm({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { currency: 'USD', type: 1, paymentMethod: 0, date: new Date().toISOString().split('T')[0], amount: 0 },
+    defaultValues: { currency: 'USD', type: initialType, paymentMethod: 0, date: new Date().toISOString().split('T')[0], amount: 0 },
   });
+
+  const formValues = watch();
+  useEffect(() => {
+    const hasDirty = Object.keys(dirtyFields).length > 0;
+    setIsDirty(hasDirty);
+  }, [dirtyFields, formValues]);
 
   useEffect(() => {
     if (existing?.data) {
@@ -50,18 +59,67 @@ export default function TransactionFormPage() {
     }
   }, [existing, reset]);
 
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  useBlocker(
+    useCallback(() => {
+      if (!isDirty) return false;
+      return !window.confirm('You have unsaved changes. Are you sure you want to leave?');
+    }, [isDirty])
+  );
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['reports'] });
+    queryClient.invalidateQueries({ queryKey: ['budgets'] });
+  };
+
   const mutation = useMutation({
     mutationFn: (data: any) => isEdit ? transactionsApi.update(Number(id), data) : transactionsApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      invalidateAll();
       toast.success(isEdit ? 'Transaction updated' : 'Transaction created');
       navigate('/transactions');
     },
   });
 
-  const accounts = accountsData?.data?.items || [];
-  const categories = categoriesData?.data || [];
+  const createAnotherMutation = useMutation({
+    mutationFn: (data: any) => transactionsApi.create(data),
+    onSuccess: () => {
+      invalidateAll();
+      toast.success('Transaction created');
+      reset({ currency: 'USD', type: watch('type'), paymentMethod: 0, date: new Date().toISOString().split('T')[0], amount: 0 });
+      setIsDirty(false);
+    },
+  });
+
+  const accounts = (accountsData?.data?.items || []).filter((a: any) => !a.isArchived);
+  const categories = (categoriesData?.data || []).filter((c: any) => {
+    const type = watch('type');
+    if (type === 0) return c.type === 0 || c.type === 2;
+    if (type === 1) return c.type === 1 || c.type === 2;
+    return true;
+  });
   const selectedType = watch('type');
+
+  const onSubmit = (data: any) => mutation.mutate(data);
+  const onSubmitAddAnother = (data: any) => {
+    if (isEdit) {
+      mutation.mutate(data);
+    } else {
+      createAnotherMutation.mutate(data);
+    }
+  };
 
   if (isEdit && loadingExisting) {
     return <div className="max-w-2xl mx-auto space-y-6"><div className="animate-pulse space-y-4">
@@ -74,7 +132,7 @@ export default function TransactionFormPage() {
 
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+          <form className="space-y-6">
             {/* Type Selection */}
             <div>
               <label className="block text-sm font-medium mb-2">Transaction Type</label>
@@ -107,7 +165,7 @@ export default function TransactionFormPage() {
             {/* Account & Category */}
             <div className="grid grid-cols-2 gap-4">
               <Select label="Account" placeholder="Select account"
-                options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+                options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
                 error={errors.accountId?.message} {...register('accountId', { valueAsNumber: true })} />
               <Select label="Category" placeholder="Select category"
                 options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
@@ -130,9 +188,16 @@ export default function TransactionFormPage() {
 
             {/* Actions */}
             <div className="flex gap-4 pt-2">
-              <Button type="submit" loading={mutation.isPending} className="flex-1">
+              <Button type="submit" loading={mutation.isPending} className="flex-1"
+                onClick={handleSubmit(onSubmit)}>
                 {isEdit ? 'Update' : 'Create'} Transaction
               </Button>
+              {!isEdit && (
+                <Button type="button" variant="secondary" loading={createAnotherMutation.isPending}
+                  onClick={handleSubmit(onSubmitAddAnother)}>
+                  Save & Add Another
+                </Button>
+              )}
               <Button type="button" variant="outline" onClick={() => navigate('/transactions')}>Cancel</Button>
             </div>
           </form>

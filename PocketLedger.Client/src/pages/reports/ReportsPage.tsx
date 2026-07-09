@@ -21,10 +21,35 @@ import {
   CurrencyDollarIcon,
   WalletIcon,
   BanknotesIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
+
+function ChangeIndicator({ value, inverse, label, isRateDiff }: { value: number; inverse: boolean; label: string; isRateDiff?: boolean }) {
+  const isGood = isRateDiff ? value >= 0 : inverse ? value <= 0 : value >= 0;
+  const isNeutral = Math.abs(value) < 0.1;
+  return (
+    <div className="flex items-center justify-center gap-0.5 mt-1">
+      {isNeutral ? (
+        <span className="text-[10px] text-muted-foreground">— vs {label}</span>
+      ) : (
+        <>
+          {isGood ? (
+            <ArrowUpIcon className="h-3 w-3 text-green-500" />
+          ) : (
+            <ArrowDownIcon className="h-3 w-3 text-red-500" />
+          )}
+          <span className={`text-[10px] ${isGood ? 'text-green-500' : 'text-red-500'}`}>
+            {Math.abs(value).toFixed(1)}% vs {label}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
 
 const formatTooltip = (value: number) => formatCurrency(value);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,6 +173,9 @@ export default function ReportsPage() {
             </div>
             <p className="text-[10px] md:text-xs text-muted-foreground">Income</p>
             <p className="text-sm md:text-lg font-bold text-green-600">{formatCurrency(report.totalIncome)}</p>
+            {report.previousPeriod && (
+              <ChangeIndicator value={report.previousPeriod.incomeChangePercent} inverse={false} label={report.previousPeriod.label} />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -157,6 +185,9 @@ export default function ReportsPage() {
             </div>
             <p className="text-[10px] md:text-xs text-muted-foreground">Expenses</p>
             <p className="text-sm md:text-lg font-bold text-red-600">{formatCurrency(report.totalExpense)}</p>
+            {report.previousPeriod && (
+              <ChangeIndicator value={report.previousPeriod.expenseChangePercent} inverse={true} label={report.previousPeriod.label} />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -168,6 +199,9 @@ export default function ReportsPage() {
             <p className={`text-sm md:text-lg font-bold ${report.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(report.netIncome)}
             </p>
+            {report.previousPeriod && (
+              <ChangeIndicator value={report.previousPeriod.netChangePercent} inverse={false} label={report.previousPeriod.label} />
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -177,6 +211,9 @@ export default function ReportsPage() {
             </div>
             <p className="text-[10px] md:text-xs text-muted-foreground">Savings Rate</p>
             <p className="text-sm md:text-lg font-bold text-purple-600">{formatPercent(report.savingsRate)}</p>
+            {report.previousPeriod && (
+              <ChangeIndicator value={report.previousPeriod.savingsRate - report.savingsRate} inverse={false} label={report.previousPeriod.label} isRateDiff />
+            )}
           </CardContent>
         </Card>
       </div>
@@ -196,7 +233,7 @@ export default function ReportsPage() {
                 <BarChart data={report.monthlyBreakdown}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="month" fontSize={11} tickLine={false} />
-                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={tooltipFormatter} />
                   <Legend />
                   <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
@@ -251,7 +288,7 @@ export default function ReportsPage() {
                 <AreaChart data={report.monthlyBreakdown}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="month" fontSize={11} tickLine={false} />
-                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
                   <Tooltip formatter={tooltipFormatter} />
                   <Area type="monotone" dataKey="income" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} name="Income" />
                   <Area type="monotone" dataKey="expense" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Expense" />

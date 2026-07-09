@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
 import { setThemeMode } from '../../app/uiSlice';
 import { setUser } from '../../features/auth/authSlice';
@@ -325,6 +326,7 @@ export default function SettingsPage() {
   const passkeys = passkeysData?.data?.passkeys || [];
   const twoFAStatus = twoFAData?.data;
   const about = aboutData?.data;
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   if (profileLoading || settingsLoading) {
     return (
@@ -337,26 +339,52 @@ export default function SettingsPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-5xl">
       <h1 className="text-3xl font-bold">Settings</h1>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1 overflow-x-auto pb-2 border-b">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              activeTab === tab.id
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-            }`}
-          >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className={isDesktop ? 'flex gap-8' : ''}>
+        {/* Desktop Sidebar Navigation */}
+        {isDesktop && (
+          <nav className="w-56 shrink-0 space-y-1" aria-label="Settings sections">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-left transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <tab.icon className="h-4 w-4 shrink-0" />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        )}
+
+        {/* Mobile Tab Navigation */}
+        {!isDesktop && (
+          <div className="flex gap-1 overflow-x-auto pb-2 border-b">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Content Area */}
+        <div className="flex-1 min-w-0">
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -876,6 +904,8 @@ export default function SettingsPage() {
           )}
         </motion.div>
       </AnimatePresence>
+      </div>
+      </div>
 
       {/* ===== MODALS ===== */}
 

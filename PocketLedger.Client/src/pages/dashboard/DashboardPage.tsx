@@ -1,18 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { dashboardApi } from '../../api/dashboard.api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
+import PageHeader from '../../components/ui/PageHeader';
 import { formatCurrency, formatDate, formatPercent } from '../../lib/utils';
-import { ACCOUNT_TYPES } from '../../lib/constants';
+import { ACCOUNT_TYPES, DASHBOARD_PERIODS } from '../../lib/constants';
+import Select from '../../components/ui/Select';
 import {
   BanknotesIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   WalletIcon,
   PlusIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
 } from '@heroicons/react/24/outline';
 import {
   Tooltip,
@@ -20,6 +25,12 @@ import {
   PieChart,
   Pie,
   Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
 } from 'recharts';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316', '#eab308', '#22c55e'];
@@ -34,12 +45,16 @@ const item = {
 };
 
 export default function DashboardPage() {
+  const [period, setPeriod] = useState('monthly');
+
   const { data, isLoading } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: () => dashboardApi.getSummary(),
+    queryKey: ['dashboard', period],
+    queryFn: () => dashboardApi.getSummary({ period }),
   });
 
   const summary = data?.data;
+
+  const prev = summary?.previousPeriod;
 
   const stats = summary
     ? [
@@ -50,48 +65,60 @@ export default function DashboardPage() {
           color: 'text-primary',
         },
         {
-          title: 'Monthly Income',
-          value: summary.monthlyIncome,
+          title: 'Income',
+          value: summary.totalIncome,
+          changePercent: prev?.incomeChangePercent,
           icon: ArrowTrendingUpIcon,
           color: 'text-success',
         },
         {
-          title: 'Monthly Expenses',
-          value: summary.monthlyExpenses,
+          title: 'Expenses',
+          value: summary.totalExpenses,
+          changePercent: prev?.expenseChangePercent,
           icon: ArrowTrendingDownIcon,
           color: 'text-destructive',
         },
         {
-          title: 'Accounts',
-          value: summary.totalAccounts,
+          title: 'Savings Rate',
+          value: summary.savingsRate,
           icon: BanknotesIcon,
           color: 'text-info',
-          isCount: true,
+          isPercent: true,
         },
       ]
     : [];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      <motion.div variants={item} className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your finances</p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/transactions/new">
-            <Button size="sm">
-              <PlusIcon className="h-4 w-4 mr-1" />
-              Transaction
-            </Button>
-          </Link>
-          <Link to="/accounts/new">
-            <Button size="sm" variant="outline">
-              <PlusIcon className="h-4 w-4 mr-1" />
-              Account
-            </Button>
-          </Link>
-        </div>
+      <motion.div variants={item}>
+        <PageHeader
+          title="Dashboard"
+          description={summary?.periodLabel ?? 'Overview of your finances'}
+          actions={
+            <div className="flex items-center gap-2">
+              <div className="w-36 md:w-44">
+                <Select
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                  options={DASHBOARD_PERIODS.map((p) => ({ value: p.value, label: p.label }))}
+                />
+              </div>
+              <Link to="/transactions/new">
+                <Button size="sm">
+                  <PlusIcon className="h-4 w-4 mr-1" />
+                  <span className="hidden md:inline">Transaction</span>
+                  <span className="md:hidden">Add</span>
+                </Button>
+              </Link>
+              <Link to="/accounts/new" className="hidden md:inline-flex">
+                <Button size="sm" variant="outline">
+                  <PlusIcon className="h-4 w-4 mr-1" />
+                  Account
+                </Button>
+              </Link>
+            </div>
+          }
+        />
       </motion.div>
 
       {/* Stats Cards */}
@@ -115,8 +142,26 @@ export default function DashboardPage() {
                       <div>
                         <p className="text-xs text-muted-foreground">{stat.title}</p>
                         <p className={`text-xl font-bold ${stat.color}`}>
-                          {stat.isCount ? stat.value : formatCurrency(stat.value)}
+                          {stat.isPercent
+                            ? formatPercent(stat.value)
+                            : formatCurrency(stat.value)}
                         </p>
+                        {stat.changePercent !== undefined && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {stat.changePercent >= 0 ? (
+                              <ArrowUpIcon className="h-3 w-3 text-success" />
+                            ) : (
+                              <ArrowDownIcon className="h-3 w-3 text-destructive" />
+                            )}
+                            <span
+                              className={`text-xs font-medium ${
+                                stat.changePercent >= 0 ? 'text-success' : 'text-destructive'
+                              }`}
+                            >
+                              {Math.abs(stat.changePercent).toFixed(1)}% vs {prev?.label}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className={`p-2 rounded-lg bg-muted ${stat.color}`}>
                         <stat.icon className="h-5 w-5" />
@@ -141,8 +186,8 @@ export default function DashboardPage() {
               ) : !summary?.topSpendingCategories?.length ? (
                 <p className="text-muted-foreground text-center py-12">No spending data yet</p>
               ) : (
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart className="chart-min-height">
                     <Pie
                       data={summary.topSpendingCategories}
                       dataKey="amount"
@@ -230,6 +275,34 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Income vs Expense Trend */}
+      <motion.div variants={item}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Income vs Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-64 w-full" />
+            ) : !summary?.monthlyBreakdown?.length ? (
+              <p className="text-muted-foreground text-center py-12">No data for this period</p>
+            ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={summary.monthlyBreakdown}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="month" fontSize={11} tickLine={false} />
+                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `$${(Number(v) / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                  <Legend />
+                  <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Transactions */}

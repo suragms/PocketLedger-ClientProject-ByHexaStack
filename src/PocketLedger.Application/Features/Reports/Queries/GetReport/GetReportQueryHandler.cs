@@ -1,4 +1,5 @@
 using MediatR;
+using PocketLedger.Domain.Common.ValueObjects;
 using PocketLedger.Domain.Enums;
 using PocketLedger.Domain.Interfaces;
 
@@ -18,30 +19,52 @@ public class GetReportQueryHandler : IRequestHandler<GetReportQuery, ReportDto>
     public async Task<ReportDto> Handle(GetReportQuery request, CancellationToken cancellationToken)
     {
         var userId = _currentUserService.UserId!;
-        var (startDate, endDate) = ResolveDates(request);
+        var now = DateTime.UtcNow;
+
+        var (currentRange, previousRange) = ResolvePeriods(request, now);
 
         var totalIncome = await _unitOfWork.Transactions.GetTotalByTypeAsync(
-            userId, TransactionType.Income, startDate, endDate, cancellationToken);
+            userId, TransactionType.Income, currentRange.Start, currentRange.End, cancellationToken);
         var totalExpense = await _unitOfWork.Transactions.GetTotalByTypeAsync(
-            userId, TransactionType.Expense, startDate, endDate, cancellationToken);
+            userId, TransactionType.Expense, currentRange.Start, currentRange.End, cancellationToken);
+
+        var prevIncome = await _unitOfWork.Transactions.GetTotalByTypeAsync(
+            userId, TransactionType.Income, previousRange.Start, previousRange.End, cancellationToken);
+        var prevExpense = await _unitOfWork.Transactions.GetTotalByTypeAsync(
+            userId, TransactionType.Expense, previousRange.Start, previousRange.End, cancellationToken);
 
         var currency = "USD";
         var accounts = await _unitOfWork.Accounts.GetAccountsByUserIdAsync(userId, cancellationToken);
         if (accounts.Count > 0)
             currency = accounts.First().Currency;
 
-        var monthlyBreakdown = await BuildMonthlyBreakdown(userId, startDate, endDate, cancellationToken);
-        var categoryBreakdown = await BuildCategoryBreakdown(userId, startDate, endDate, cancellationToken);
-        var walletAnalysis = await BuildWalletAnalysis(userId, accounts, startDate, endDate, cancellationToken);
-        var budgetAnalysis = await BuildBudgetAnalysis(userId, cancellationToken);
-        var dailyTrend = await BuildDailyTrend(userId, startDate, endDate, cancellationToken);
+        var monthlyBreakdown = await BuildMonthlyBreakdown(userId, currentRange.Start, currentRange.End, cancellationToken);
+        var categoryBreakdown = await BuildCategoryBreakdown(userId, currentRange.Start, currentRange.End, cancellationToken);
+        var walletAnalysis = await BuildWalletAnalysis(userId, accounts, currentRange.Start, currentRange.End, cancellationToken);
+        var budgetAnalysis = await BuildBudgetAnalysis(userId, currentRange.Start, currentRange.End, cancellationToken);
+        var dailyTrend = await BuildDailyTrend(userId, currentRange.Start, currentRange.End, cancellationToken);
         var weeklyComparison = BuildWeeklyComparison(monthlyBreakdown);
+
+        var prevNetIncome = prevIncome - prevExpense;
+        var currentNetIncome = totalIncome - totalExpense;
+
+        var previousPeriod = new PreviousPeriodComparisonDto
+        {
+            Label = GetPreviousPeriodLabel(request, now),
+            Income = prevIncome,
+            Expense = prevExpense,
+            NetIncome = prevNetIncome,
+            SavingsRate = prevIncome > 0 ? (double)(prevNetIncome / prevIncome) * 100 : 0,
+            IncomeChangePercent = prevIncome > 0 ? Math.Round((double)((totalIncome - prevIncome) / prevIncome) * 100, 1) : 0,
+            ExpenseChangePercent = prevExpense > 0 ? Math.Round((double)((totalExpense - prevExpense) / prevExpense) * 100, 1) : 0,
+            NetChangePercent = prevNetIncome != 0 ? Math.Round((double)((currentNetIncome - prevNetIncome) / Math.Abs(prevNetIncome)) * 100, 1) : 0,
+        };
 
         return new ReportDto
         {
             Period = request.Period,
-            StartDate = startDate,
-            EndDate = endDate,
+            StartDate = currentRange.Start,
+            EndDate = currentRange.End,
             TotalIncome = totalIncome,
             TotalExpense = totalExpense,
             Currency = currency,
@@ -51,20 +74,53 @@ public class GetReportQueryHandler : IRequestHandler<GetReportQuery, ReportDto>
             BudgetAnalysis = budgetAnalysis,
             DailyTrend = dailyTrend,
             WeeklyComparison = weeklyComparison,
+            PreviousPeriod = previousPeriod,
         };
     }
 
-    private static (DateTime Start, DateTime End) ResolveDates(GetReportQuery request)
+    private static (DateRange Current, DateRange Previous) ResolvePeriods(GetReportQuery request, DateTime now)
     {
-        var end = request.EndDate ?? DateTime.UtcNow;
-        var start = request.StartDate ?? request.Period.ToLower() switch
+        if (request.StartDate.HasValue && request.EndDate.HasValue)
         {
-            "weekly" => end.AddDays(-28),
-            "monthly" => end.AddMonths(-12),
-            "yearly" => end.AddYears(-5),
-            _ => end.AddMonths(-12),
+            var current = DateRange.Create(request.StartDate.Value, request.EndDate.Value);
+            var duration = current.End - current.Start;
+            var prevEnd = current.Start.AddDays(-1);
+            var prevStart = prevEnd.AddDays(-duration.TotalDays);
+            return (current, DateRange.Create(prevStart, prevEnd));
+        }
+
+        var period = request.Period.ToLowerInvariant();
+        var end = now;
+        DateRange cur = period switch
+        {
+            "weekly" => DateRange.Last30Days(end),
+            "monthly" => DateRange.Create(end.AddMonths(-12), end),
+            "yearly" => DateRange.Create(end.AddYears(-5), end),
+            _ => DateRange.Create(end.AddMonths(-12), end),
         };
-        return (start, end);
+        return (cur, GetMultiMonthPreviousPeriod(cur));
+    }
+
+    private static DateRange GetMultiMonthPreviousPeriod(DateRange current)
+    {
+        var duration = current.End - current.Start;
+        var prevEnd = current.Start.AddDays(-1);
+        var prevStart = prevEnd.AddDays(-duration.TotalDays);
+        return DateRange.Create(prevStart, prevEnd);
+    }
+
+    private static string GetPreviousPeriodLabel(GetReportQuery request, DateTime now)
+    {
+        if (request.StartDate.HasValue && request.EndDate.HasValue)
+            return "Previous Period";
+
+        return request.Period.ToLowerInvariant() switch
+        {
+            "weekly" => "Previous Month",
+            "monthly" => "Previous 12 Months",
+            "yearly" => "Previous 5 Years",
+            _ => "Previous Period",
+        };
     }
 
     private async Task<List<MonthlyDataDto>> BuildMonthlyBreakdown(
@@ -143,20 +199,44 @@ public class GetReportQueryHandler : IRequestHandler<GetReportQuery, ReportDto>
         return result.OrderByDescending(w => w.Balance).ToList();
     }
 
-    private async Task<List<BudgetAnalysisDto>> BuildBudgetAnalysis(string userId, CancellationToken ct)
+    private async Task<List<BudgetAnalysisDto>> BuildBudgetAnalysis(
+        string userId, DateTime start, DateTime end, CancellationToken ct)
     {
         var budgets = await _unitOfWork.Budgets.GetBudgetsByUserIdAsync(userId, ct);
 
-        return budgets.Where(b => b.IsActive).Select(b => new BudgetAnalysisDto
+        var result = new List<BudgetAnalysisDto>();
+        foreach (var b in budgets.Where(b => b.IsActive))
         {
-            BudgetId = b.Id,
-            Name = b.Name,
-            BudgetAmount = b.Amount,
-            SpentAmount = 0,
-            PercentUsed = 0,
-            Status = "On Track",
-            CategoryName = b.Category?.Name,
-        }).ToList();
+            decimal spentAmount = 0;
+
+            if (b.CategoryId.HasValue)
+            {
+                spentAmount = await _unitOfWork.Transactions.GetTotalByCategoryAsync(
+                    userId, b.CategoryId.Value, start, end, ct);
+            }
+            else
+            {
+                var allExpenses = await _unitOfWork.Transactions.GetTotalByTypeAsync(
+                    userId, TransactionType.Expense, start, end, ct);
+                spentAmount = allExpenses;
+            }
+
+            var percentUsed = b.Amount > 0 ? Math.Round((double)(spentAmount / b.Amount) * 100, 1) : 0;
+            var isOver = spentAmount > b.Amount;
+
+            result.Add(new BudgetAnalysisDto
+            {
+                BudgetId = b.Id,
+                Name = b.Name,
+                BudgetAmount = b.Amount,
+                SpentAmount = spentAmount,
+                PercentUsed = percentUsed,
+                Status = isOver ? "Over Budget" : percentUsed >= 80 ? "Near Limit" : "On Track",
+                CategoryName = b.Category?.Name,
+            });
+        }
+
+        return result;
     }
 
     private async Task<List<DailyTrendDto>> BuildDailyTrend(

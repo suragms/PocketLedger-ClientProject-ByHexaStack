@@ -20,9 +20,10 @@ export default function ReceiptUpload({ transaction, onUpdate }: ReceiptUploadPr
   const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
+    const currentUrl = objectUrlRef.current;
     return () => {
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
       }
     };
   }, []);

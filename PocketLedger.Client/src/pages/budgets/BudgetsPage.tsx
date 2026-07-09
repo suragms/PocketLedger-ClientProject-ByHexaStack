@@ -50,15 +50,17 @@ export default function BudgetsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['budget-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       toast.success('Budget deleted');
       setDeleteId(null);
     },
   });
 
-  const budgets = data?.data || [];
   const analytics = analyticsData?.data;
 
   const filteredBudgets = useMemo(() => {
+    const budgets = data?.data || [];
     switch (activeTab) {
       case 'active': return budgets.filter((b) => b.isActive);
       case 'over': return budgets.filter((b) => b.isOverBudget);
@@ -66,15 +68,18 @@ export default function BudgetsPage() {
       case 'ontrack': return budgets.filter((b) => !b.isOverBudget && !b.isNearLimit);
       default: return budgets;
     }
-  }, [budgets, activeTab]);
+  }, [data, activeTab]);
 
-  const tabCounts = useMemo(() => ({
-    all: budgets.length,
-    active: budgets.filter((b) => b.isActive).length,
-    over: budgets.filter((b) => b.isOverBudget).length,
-    near: budgets.filter((b) => b.isNearLimit && !b.isOverBudget).length,
-    ontrack: budgets.filter((b) => !b.isOverBudget && !b.isNearLimit).length,
-  }), [budgets]);
+  const tabCounts = useMemo(() => {
+    const budgets = data?.data || [];
+    return {
+      all: budgets.length,
+      active: budgets.filter((b) => b.isActive).length,
+      over: budgets.filter((b) => b.isOverBudget).length,
+      near: budgets.filter((b) => b.isNearLimit && !b.isOverBudget).length,
+      ontrack: budgets.filter((b) => !b.isOverBudget && !b.isNearLimit).length,
+    };
+  }, [data]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">

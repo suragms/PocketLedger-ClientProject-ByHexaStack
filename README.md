@@ -8,25 +8,28 @@
 
 ## 📌 Project Overview
 
-**PocketLedger** is a full-stack, enterprise-grade personal finance management web application built as a commissioned client project by **HexaStack Solutions**. It enables users to seamlessly track income and expenses, manage budgets, visualize spending trends, and stay on top of their financial goals — all within a clean, modern interface.
+**PocketLedger** is a full-stack, enterprise-grade personal finance management web application built as a commissioned client project by **HexaStack Solutions**. It enables users to seamlessly track income and expenses, manage budgets, visualize spending trends, and stay on top of their financial goals — all within a clean, modern, responsive interface optimized for both mobile and desktop.
 
-The platform features a secure **admin panel** for user management, a rich **user dashboard** with real-time financial analytics, and a robust **REST API backend** following clean architecture principles.
+The platform features a secure **admin panel** for user management, a rich **user dashboard** with real-time financial analytics, adaptive **mobile-first** and **desktop-optimized** layouts, and a robust **REST API backend** following clean architecture principles with CQRS.
 
 ---
 
 ## ✨ Key Features
 
-- 🔐 **Authentication & Authorization** — JWT-based auth with ASP.NET Core Identity and role-based access control
-- 👥 **Admin Panel** — Admins can create and manage users, assign roles, set credentials, and copy IDs/passwords
-- 📊 **Financial Dashboard** — Visualize income vs. expense trends, category breakdowns, and account balances
-- 💳 **Account Management** — Create and manage multiple financial accounts (savings, current, cash, etc.)
-- 🏷️ **Category & Tag Management** — Organize transactions with custom categories and tags
-- 📋 **Transaction Tracking** — Full CRUD for income/expense transactions with filtering and pagination
+- 🔐 **Authentication & Authorization** — JWT-based auth with ASP.NET Core Identity, role-based access control, 2FA (TOTP), and passkeys (WebAuthn)
+- 👥 **Admin Panel** — Admins can manage users, roles, transactions, categories, wallets, budgets, reports, and view audit logs
+- 📊 **Financial Dashboard** — Period-over-period comparison, savings rate, spending by category, budget progress, income vs expense trends, recent transactions
+- 💳 **Account Management** — Multiple account types (savings, current, cash, credit, investment), archive/restore with balance-safe deletion
+- 🏷️ **Category Management** — Hierarchical categories with type enforcement (income/expense), circular-reference prevention, starter category seeding
+- 📋 **Transaction Tracking** — Full CRUD with search, multi-faceted filters (date, type, account, category, amount range), infinite scroll, daily grouping, soft delete with undo
 - 📅 **Recurring Transactions** — Set up recurring income/expense entries automatically
-- 📦 **Budget Management** — Create monthly/yearly budgets per category with overspend alerts
-- 🔔 **Notification System** — In-app notifications and budget breach alerts
-- 📈 **Reports & Exports** — Generate financial summaries and export data
+- 📦 **Budget Management** — Category budgets with actual-spending comparison, over-budget/near-limit/on-track status, progress bars
+- 🔔 **Notification System** — In-app notifications with real-time polling, per-channel preferences (email, push), budget breach alerts
+- 📈 **Reports & Exports** — Interactive reports with previous-period comparison, category breakdown, daily/weekly trends, wallet analysis, budget variance; CSV and PDF export
+- 🌗 **Dark Mode** — Light, dark, and system-follow theme with HSL-based CSS variables
+- 📱 **Responsive Design** — Adaptive mobile bottom navigation, desktop sidebar, bottom sheets, responsive charts, touch-optimized controls
 - 🐳 **Docker Ready** — Fully containerized with Docker and docker-compose for easy deployment
+- 🛡️ **Security** — 2FA, passkeys, session management, PIN login, role-based admin access, input validation (Zod + FluentValidation)
 
 ---
 
@@ -35,28 +38,31 @@ The platform features a secure **admin panel** for user management, a rich **use
 ### Frontend
 | Technology | Purpose |
 |---|---|
-| **React 18 + TypeScript** | UI framework with type safety |
-| **Vite** | Lightning-fast build tool and dev server |
-| **React Query (TanStack)** | Server state management & caching |
-| **React Router v6** | Client-side routing |
-| **Axios** | HTTP client for API communication |
-| **Recharts** | Data visualization charts |
-| **Vanilla CSS** | Custom styling with glassmorphism & animations |
+| **React 19 + TypeScript 6** | UI framework with type safety |
+| **Vite 8** | Lightning-fast build tool and dev server |
+| **TanStack Query v5** | Server state management & caching |
+| **React Router v7** | Client-side routing with lazy loading |
+| **Redux Toolkit** | Global state (auth, UI/theme) |
+| **Tailwind CSS v4** | Utility-first styling with HSL design tokens |
+| **Recharts** | Data visualization (pie, bar, area, radar charts) |
+| **Framer Motion** | Page transitions and UI animations |
+| **Headless UI** | Accessible dialogs, menus, transitions |
+| **React Hook Form + Zod v4** | Form handling and validation |
+| **Axios** | HTTP client with automatic token refresh |
+| **react-hot-toast** | Toast notifications |
 
 ### Backend
 | Technology | Purpose |
 |---|---|
-| **ASP.NET Core 8** | Web API framework |
-| **C# 12** | Primary programming language |
-| **Entity Framework Core 8** | ORM & database migrations |
-| **SQLite** | Lightweight relational database |
+| **.NET 10** | Web API framework |
+| **C# 14** | Primary programming language |
+| **Entity Framework Core 10** | ORM & database migrations |
+| **SQLite** | Development database |
 | **ASP.NET Core Identity** | Authentication, user management, password hashing |
 | **JWT Bearer Tokens** | Stateless authentication |
 | **MediatR** | CQRS pattern (Commands & Queries) |
-| **AutoMapper** | Entity-to-DTO mapping |
+| **AutoMapper** | Object mapping |
 | **FluentValidation** | Input validation pipeline |
-| **Hangfire** | Background job scheduling |
-| **Serilog** | Structured logging |
 | **Swagger / OpenAPI** | API documentation |
 
 ### Architecture
@@ -72,19 +78,27 @@ The platform features a secure **admin panel** for user management, a rich **use
 ```
 PocketLedger/
 ├── src/
-│   ├── PocketLedger.API/            # ASP.NET Core Web API (Controllers, Middleware, Startup)
-│   ├── PocketLedger.Application/    # CQRS Handlers, DTOs, Validators, Interfaces
-│   ├── PocketLedger.Domain/         # Entities, Domain Events, Enums, Core Interfaces
-│   └── PocketLedger.Infrastructure/ # EF Core, Repositories, Identity, External Services
-├── PocketLedger.Client/             # React + TypeScript Frontend (Vite)
+│   ├── PocketLedger.API/            # ASP.NET Core Web API (Controllers, Middleware, Program.cs)
+│   ├── PocketLedger.Application/    # CQRS Handlers, DTOs, Validators, Interfaces, Value Objects
+│   ├── PocketLedger.Domain/         # Entities, Enums, Interfaces, Value Objects (DateRange)
+│   └── PocketLedger.Infrastructure/ # EF Core, Repositories, Identity, Migrations, Services
+├── PocketLedger.Client/             # React 19 + TypeScript 6 Frontend (Vite 8)
 │   ├── src/
-│   │   ├── pages/                   # Page components (Dashboard, Admin, Auth, etc.)
-│   │   ├── components/              # Reusable UI components
-│   │   ├── hooks/                   # Custom React hooks
-│   │   ├── services/                # API service functions
-│   │   └── types/                   # TypeScript interfaces
-├── tests/                           # Unit & Integration test projects
-├── database/                        # Database seed scripts
+│   │   ├── api/                     # Axios API clients per resource (10+ modules)
+│   │   ├── app/                     # Redux store (auth, ui)
+│   │   ├── components/              # Reusable UI (Card, Button, Modal, Sheet, etc.)
+│   │   │   ├── layout/              # MainLayout, Sidebar, Header, MobileNav
+│   │   │   ├── transactions/        # TransactionItem, DayGroup, FilterPanel, QuickAddSheet
+│   │   │   └── ui/                  # Primitives (AdaptiveSheet, PageHeader, ResponsiveGrid, etc.)
+│   │   ├── features/                # Redux slices (auth)
+│   │   ├── hooks/                   # useMediaQuery, useDebounce, useInfiniteScroll
+│   │   ├── lib/                     # Utils, validators (Zod), constants, responsive helpers
+│   │   └── pages/                   # 30+ page components (lazy loaded)
+│   └── src/App.tsx                  # React Router v7 route definitions
+├── tests/
+│   ├── PocketLedger.API.Tests/      # 3 controller tests
+│   ├── PocketLedger.Application.Tests/ # 47 handler/validator/value-object tests
+│   └── PocketLedger.Infrastructure.Tests/ # 7 repository tests
 ├── docker-compose.yml               # Docker orchestration
 └── Dockerfile                       # Container build config
 ```
@@ -94,8 +108,8 @@ PocketLedger/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Node.js 18+](https://nodejs.org/) & npm
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Node.js 20+](https://nodejs.org/) & npm
 - [Git](https://git-scm.com/)
 
 ### 1. Clone the Repository
@@ -136,7 +150,8 @@ npm install
 npm run dev
 ```
 
-The frontend will start at `http://localhost:5174`.
+The frontend will start at `http://localhost:5174`.  
+API requests are proxied to `http://localhost:5130` automatically.
 
 ### 5. Admin Panel Access
 
@@ -164,10 +179,44 @@ This will spin up both the API and frontend containers.
 dotnet test
 ```
 
-Runs all unit and integration tests across the three test projects:
-- `PocketLedger.API.Tests`
-- `PocketLedger.Application.Tests`
-- `PocketLedger.Infrastructure.Tests`
+Runs all 57 unit and integration tests across the three test projects:
+- `PocketLedger.API.Tests` — 3 tests
+- `PocketLedger.Application.Tests` — 47 tests
+- `PocketLedger.Infrastructure.Tests` — 7 tests
+
+### Frontend Checks
+
+```bash
+cd PocketLedger.Client
+npm run lint      # Oxlint (0 warnings expected)
+npm run build     # TypeScript + Vite build (0 errors expected)
+```
+
+---
+
+## 📱 Responsive Design
+
+PocketLedger provides **two intentionally designed experiences** from one shared codebase:
+
+| | Mobile | Desktop |
+|---|---|---|
+| **Navigation** | Fixed bottom bar (Home, History, Add, Reports, Settings) | Persistent left sidebar (256px / collapsible to 80px) |
+| **Dashboard** | 2-column cards, simplified charts | 4-column cards, detailed charts, full-width trends |
+| **Transaction Entry** | Bottom sheet quick add → full-page form | QuickAddSheet popover → centered modal form |
+| **History** | Card view, bottom-sheet filters, infinite scroll | Table view, inline filters, sort dropdown |
+| **Reports** | Single-column charts, scrollable | 2-column grid, detailed tooltips |
+| **Settings** | Horizontal scrollable tabs | Left sidebar navigation panel |
+| **Charts** | 220–280px height, touch tooltips | 350px+ height, hover tooltips |
+
+---
+
+## 📚 Documentation
+
+- `docs/POCKETLEDGER_CODEBASE_AUDIT.md` — Original codebase analysis
+- `docs/POCKLEDGER_IMPLEMENTATION_PLAN.md` — 12-step implementation roadmap
+- `docs/POCKETLEDGER_PRODUCTION_AUDIT.md` — Production readiness assessment
+- `docs/POCKETLEDGER_RESPONSIVE_AUDIT.md` — Responsive UX audit
+- `docs/POCKETLEDGER_MOBILE_DESKTOP_FINAL_AUDIT.md` — Final mobile/desktop audit
 
 ---
 

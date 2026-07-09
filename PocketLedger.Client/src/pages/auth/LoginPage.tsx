@@ -34,7 +34,7 @@ export default function LoginPage() {
       let userObj = null;
       try {
         userObj = userStr ? JSON.parse(userStr) : null;
-      } catch (e) {
+      } catch {
         userObj = null;
       }
       if (userObj?.roles?.includes('Admin')) {

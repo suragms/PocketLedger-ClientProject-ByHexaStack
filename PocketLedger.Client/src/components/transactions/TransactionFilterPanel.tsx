@@ -7,7 +7,9 @@ import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
+import AdaptiveSheet from '../ui/AdaptiveSheet';
 import { TRANSACTION_TYPES, SORT_OPTIONS } from '../../lib/constants';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { TransactionFilters } from '../../types';
 
 interface TransactionFilterPanelProps {
@@ -18,6 +20,8 @@ interface TransactionFilterPanelProps {
 
 export default function TransactionFilterPanel({ filters, onFiltersChange, onClear }: TransactionFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showSheet, setShowSheet] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const { data: accountsData } = useQuery({
     queryKey: ['accounts-dropdown'],
@@ -52,12 +56,65 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
     ? `${filters.sortBy}_${filters.sortOrder || 'desc'}`
     : '';
 
+  const handleToggleFilters = () => {
+    if (isMobile) {
+      setShowSheet(true);
+    } else {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
+  const filterContent = (
+    <div className="grid grid-cols-2 gap-4">
+      <Input
+        label="Start Date"
+        type="date"
+        value={filters.startDate || ''}
+        onChange={(e) => updateFilter('startDate', e.target.value)}
+      />
+      <Input
+        label="End Date"
+        type="date"
+        value={filters.endDate || ''}
+        onChange={(e) => updateFilter('endDate', e.target.value)}
+      />
+      <Select
+        label="Account"
+        placeholder="All accounts"
+        options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
+        value={filters.accountId || ''}
+        onChange={(e) => updateFilter('accountId', e.target.value ? Number(e.target.value) : undefined)}
+      />
+      <Select
+        label="Category"
+        placeholder="All categories"
+        options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+        value={filters.categoryId || ''}
+        onChange={(e) => updateFilter('categoryId', e.target.value ? Number(e.target.value) : undefined)}
+      />
+      <Input
+        label="Min Amount"
+        type="number"
+        placeholder="0.00"
+        value={filters.minAmount || ''}
+        onChange={(e) => updateFilter('minAmount', e.target.value ? Number(e.target.value) : undefined)}
+      />
+      <Input
+        label="Max Amount"
+        type="number"
+        placeholder="999999.99"
+        value={filters.maxAmount || ''}
+        onChange={(e) => updateFilter('maxAmount', e.target.value ? Number(e.target.value) : undefined)}
+      />
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {/* Filter Bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={handleToggleFilters}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
             isExpanded || activeFilterCount > 0
               ? 'border-primary bg-primary/5 text-primary'
@@ -71,7 +128,9 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
               {activeFilterCount}
             </Badge>
           )}
-          <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          {!isMobile && (
+            <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          )}
         </button>
 
         {/* Quick Type Filters */}
@@ -112,7 +171,7 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
                 onFiltersChange({ ...filters, sortBy: undefined, sortOrder: undefined });
               }
             }}
-            className="w-48 h-9 text-xs"
+            className="w-40 md:w-48 h-9 text-xs"
           />
         </div>
 
@@ -123,54 +182,32 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
         )}
       </div>
 
-      {/* Expanded Filter Panel */}
-      {isExpanded && (
-        <div className="p-4 rounded-xl border bg-card grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input
-            label="Start Date"
-            type="date"
-            value={filters.startDate || ''}
-            onChange={(e) => updateFilter('startDate', e.target.value)}
-          />
-          <Input
-            label="End Date"
-            type="date"
-            value={filters.endDate || ''}
-            onChange={(e) => updateFilter('endDate', e.target.value)}
-          />
-          <Select
-            label="Account"
-            placeholder="All accounts"
-            options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
-            value={filters.accountId || ''}
-            onChange={(e) => updateFilter('accountId', e.target.value ? Number(e.target.value) : undefined)}
-          />
-          <Select
-            label="Category"
-            placeholder="All categories"
-            options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-            value={filters.categoryId || ''}
-            onChange={(e) => updateFilter('categoryId', e.target.value ? Number(e.target.value) : undefined)}
-          />
-          <Input
-            label="Min Amount"
-            type="number"
-            placeholder="0.00"
-            value={filters.minAmount || ''}
-            onChange={(e) => updateFilter('minAmount', e.target.value ? Number(e.target.value) : undefined)}
-          />
-          <Input
-            label="Max Amount"
-            type="number"
-            placeholder="999999.99"
-            value={filters.maxAmount || ''}
-            onChange={(e) => updateFilter('maxAmount', e.target.value ? Number(e.target.value) : undefined)}
-          />
+      {/* Desktop: Expanded Filter Panel */}
+      {!isMobile && isExpanded && (
+        <div className="p-4 rounded-xl border bg-card">
+          {filterContent}
         </div>
       )}
 
+      {/* Mobile: Bottom Sheet Filter */}
+      <AdaptiveSheet
+        isOpen={showSheet}
+        onClose={() => setShowSheet(false)}
+        title="Filters"
+        description={`${activeFilterCount} active filter${activeFilterCount !== 1 ? 's' : ''}`}
+        size="lg"
+      >
+        <div className="space-y-4">
+          {filterContent}
+          <div className="flex gap-3 pt-2">
+            <Button className="flex-1" onClick={() => { setShowSheet(false); }}>Apply</Button>
+            <Button variant="outline" onClick={() => { onClear(); setShowSheet(false); }}>Clear All</Button>
+          </div>
+        </div>
+      </AdaptiveSheet>
+
       {/* Active Filter Badges */}
-      {activeFilterCount > 0 && !isExpanded && (
+      {activeFilterCount > 0 && !isExpanded && !isMobile && (
         <div className="flex flex-wrap gap-1.5">
           {filters.startDate && (
             <Badge variant="outline" className="text-[10px]">

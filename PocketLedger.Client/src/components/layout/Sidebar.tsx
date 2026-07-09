@@ -7,9 +7,11 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { cn } from '../../lib/utils';
 import {
   HomeIcon,
+  WalletIcon,
   BanknotesIcon,
   ArrowPathIcon,
   FolderIcon,
+  CurrencyDollarIcon,
   ChartBarIcon,
   Cog6ToothIcon,
   XMarkIcon,
@@ -20,11 +22,11 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
-  { name: 'Wallets', href: '/wallets', icon: BanknotesIcon },
+  { name: 'Wallets', href: '/wallets', icon: WalletIcon },
   { name: 'Accounts', href: '/accounts', icon: BanknotesIcon },
   { name: 'Transactions', href: '/transactions', icon: ArrowPathIcon },
   { name: 'Categories', href: '/categories', icon: FolderIcon },
-  { name: 'Budgets', href: '/budgets', icon: ChartBarIcon },
+  { name: 'Budgets', href: '/budgets', icon: CurrencyDollarIcon },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon },
   { name: 'Notifications', href: '/notifications', icon: BellIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },

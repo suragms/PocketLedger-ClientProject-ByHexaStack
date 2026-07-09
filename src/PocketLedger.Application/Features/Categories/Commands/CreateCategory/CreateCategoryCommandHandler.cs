@@ -31,10 +31,19 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             var parent = await _unitOfWork.Categories.GetByIdAsync(request.ParentId.Value, cancellationToken);
             if (parent == null || parent.UserId != _currentUserService.UserId)
                 throw new NotFoundException(nameof(Category), request.ParentId.Value);
+
+            if (parent.IsArchived)
+                throw new InvalidOperationException("Cannot create a subcategory under an archived category.");
+
+            if (parent.Type != CategoryType.Both && (CategoryType)request.Type != parent.Type)
+                throw new InvalidOperationException($"Cannot create a {(CategoryType)request.Type} subcategory under a {parent.Type} category.");
         }
 
         var categories = await _unitOfWork.Categories.GetCategoriesByUserIdAsync(
             _currentUserService.UserId!, cancellationToken);
+        if (categories.Any(c => c.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase) && c.ParentId == request.ParentId))
+            throw new InvalidOperationException("A category with this name already exists at the same level.");
+
         var maxOrder = categories.Count > 0 ? categories.Max(c => c.DisplayOrder) : 0;
 
         var category = new Category

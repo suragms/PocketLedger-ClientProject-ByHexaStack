@@ -77,10 +77,16 @@ export default function TransactionsPage() {
     setAllTransactions([]);
   }, [debouncedSearch, filters]);
 
+  const invalidateFinancialData = () => {
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['reports'] });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => transactionsApi.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      invalidateFinancialData();
       setDeleteTarget(null);
       toast.success('Transaction deleted');
     },
@@ -89,7 +95,7 @@ export default function TransactionsPage() {
   const undoMutation = useMutation({
     mutationFn: (id: number) => transactionsApi.undoDelete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      invalidateFinancialData();
       queryClient.invalidateQueries({ queryKey: ['transactions-deleted'] });
       toast.success('Transaction restored');
     },

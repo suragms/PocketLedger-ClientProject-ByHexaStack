@@ -1,5 +1,4 @@
 using PocketLedger.Domain.Common;
-using PocketLedger.Domain.Common.ValueObjects;
 using PocketLedger.Domain.Enums;
 
 namespace PocketLedger.Domain.Entities;
@@ -14,6 +13,7 @@ public class Account : BaseAuditableEntity
     public string? Color { get; set; }
     public string? Icon { get; set; }
     public bool IncludeInBalance { get; set; } = true;
+    public bool IsArchived { get; set; }
     public int DisplayOrder { get; set; }
     public string UserId { get; set; } = string.Empty;
 

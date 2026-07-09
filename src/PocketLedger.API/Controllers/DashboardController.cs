@@ -16,9 +16,18 @@ public class DashboardController : ControllerBase
     public DashboardController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet("summary")]
-    public async Task<IActionResult> GetSummary()
+    public async Task<IActionResult> GetSummary(
+        [FromQuery] string? period,
+        [FromQuery] DateTime? customStartDate,
+        [FromQuery] DateTime? customEndDate)
     {
-        var result = await _mediator.Send(new GetDashboardSummaryQuery());
+        var query = new GetDashboardSummaryQuery
+        {
+            Period = period,
+            CustomStartDate = customStartDate,
+            CustomEndDate = customEndDate,
+        };
+        var result = await _mediator.Send(query);
         return Ok(ApiResponse<DashboardSummaryDto>.SuccessResponse(result));
     }
 }

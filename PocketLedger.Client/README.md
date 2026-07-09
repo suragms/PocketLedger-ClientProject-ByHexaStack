@@ -1,32 +1,48 @@
-# React + TypeScript + Vite
+# PocketLedger Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + TypeScript 6 + Vite 8 frontend for PocketLedger personal finance management.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The dev server starts at `http://localhost:5174` with API proxy to `http://localhost:5130`.
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | TypeScript check + Vite production build |
+| `npm run lint` | Run Oxlint linter |
+| `npm run preview` | Preview production build locally |
+
+## Tech Stack
+
+- React 19, TypeScript 6, Vite 8
+- Tailwind CSS v4 (CSS-first configuration)
+- TanStack Query v5 (server state)
+- Redux Toolkit (auth, UI state)
+- React Router v7 (lazy routes)
+- Recharts (charts)
+- Framer Motion (animations)
+- Headless UI (accessible overlays)
+- React Hook Form + Zod v4 (forms + validation)
+- Axios (HTTP client with token refresh)
+
+## Project Structure
+
+```
+src/
+├── api/          # Axios API clients (11 modules)
+├── app/          # Redux store, hooks, UI slice
+├── components/   # UI primitives, layout, shared, transaction components
+├── features/     # Redux slices
+├── hooks/        # useMediaQuery, useDebounce, useInfiniteScroll
+├── lib/          # Utils, validators (Zod), constants, responsive helpers
+├── pages/        # 30+ lazy-loaded route pages
+└── types/        # TypeScript interfaces
+```

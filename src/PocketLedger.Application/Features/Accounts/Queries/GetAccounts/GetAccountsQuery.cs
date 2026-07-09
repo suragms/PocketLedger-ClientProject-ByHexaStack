@@ -9,4 +9,5 @@ public class GetAccountsQuery : PaginationRequest, IRequest<PagedResult<AccountD
 {
     public AccountType? AccountType { get; set; }
     public bool? IncludeInBalance { get; set; }
+    public bool? IsArchived { get; set; }
 }

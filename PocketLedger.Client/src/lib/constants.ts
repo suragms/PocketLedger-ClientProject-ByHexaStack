@@ -82,6 +82,12 @@ export const REPORT_PERIODS = [
   { value: 'custom', label: 'Custom', description: 'Choose dates' },
 ] as const;
 
+export const DASHBOARD_PERIODS = [
+  { value: 'monthly', label: 'This Month' },
+  { value: 'quarter', label: 'This Quarter' },
+  { value: 'year', label: 'This Year' },
+] as const;
+
 export const CHART_COLORS = [
   '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316',
   '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',

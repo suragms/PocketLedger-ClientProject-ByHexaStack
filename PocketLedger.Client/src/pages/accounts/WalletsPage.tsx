@@ -92,6 +92,7 @@ export default function WalletsPage() {
     mutationFn: (id: number) => accountsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       toast.success('Wallet deleted');
       setDeleteDialogOpen(false);
       setDeletingWallet(null);
@@ -99,13 +100,34 @@ export default function WalletsPage() {
     onError: () => toast.error('Failed to delete wallet'),
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => accountsApi.archive(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Wallet archived');
+    },
+    onError: () => toast.error('Failed to archive wallet'),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: number) => accountsApi.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success('Wallet restored');
+    },
+    onError: () => toast.error('Failed to restore wallet'),
+  });
+
   const accounts = data?.data?.items || [];
   const totalPages = data?.data?.totalPages || 1;
   const selectedColor = watch('color');
 
   const totalBalance = useMemo(() => {
-    return accounts.filter((a) => a.includeInBalance).reduce((sum, a) => sum + a.balance, 0);
-  }, [accounts]);
+    const items = data?.data?.items || [];
+    return items.filter((a) => a.includeInBalance).reduce((sum, a) => sum + a.balance, 0);
+  }, [data]);
 
   const openModal = (wallet?: Account) => {
     if (wallet) {
@@ -261,20 +283,42 @@ export default function WalletsPage() {
                               >
                                 {typeInfo?.label || 'Other'}
                               </Badge>
-                              {!wallet.includeInBalance && (
+                              {wallet.isArchived && (
+                                <Badge variant="warning" className="text-[10px] px-1.5 py-0">Archived</Badge>
+                              )}
+                              {!wallet.includeInBalance && !wallet.isArchived && (
                                 <Badge variant="warning" className="text-[10px] px-1.5 py-0">Excluded</Badge>
                               )}
                             </div>
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => openModal(wallet)}
-                            className="p-1.5 rounded-lg hover:bg-muted transition-colors"
-                            title="Edit"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
+                          {wallet.isArchived ? (
+                            <button
+                              onClick={() => restoreMutation.mutate(wallet.id)}
+                              className="p-1.5 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
+                              title="Restore"
+                            >
+                              <ArrowUpIcon className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => archiveMutation.mutate(wallet.id)}
+                              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                              title="Archive"
+                            >
+                              <TrashIcon className="h-4 w-4 rotate-45" />
+                            </button>
+                          )}
+                          {!wallet.isArchived && (
+                            <button
+                              onClick={() => openModal(wallet)}
+                              className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                              title="Edit"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDelete(wallet)}
                             className="p-1.5 rounded-lg hover:bg-red-50 text-destructive transition-colors"

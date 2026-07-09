@@ -23,7 +23,7 @@ public class User : IdentityUser
     public string? SecurityStamp2 { get; set; }
 
     // 2FA
-    public bool TwoFactorEnabled { get; set; }
+    public new bool TwoFactorEnabled { get; set; }
     public string? TwoFactorSecretKey { get; set; }
     public string[] TwoFactorRecoveryCodes { get; set; } = Array.Empty<string>();
     public DateTime? TwoFactorEnabledAt { get; set; }

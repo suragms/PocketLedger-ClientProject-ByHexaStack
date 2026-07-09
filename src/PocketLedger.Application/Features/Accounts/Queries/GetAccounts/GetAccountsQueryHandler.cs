@@ -31,6 +31,10 @@ public class GetAccountsQueryHandler : IRequestHandler<GetAccountsQuery, PagedRe
         var filtered = accounts
             .Where(a => !request.AccountType.HasValue || a.Type == request.AccountType.Value)
             .Where(a => !request.IncludeInBalance.HasValue || a.IncludeInBalance == request.IncludeInBalance.Value)
+            .Where(a => !request.IsArchived.HasValue || a.IsArchived == request.IsArchived.Value)
+            .Where(a => string.IsNullOrWhiteSpace(request.Search)
+                || a.Name.Contains(request.Search, StringComparison.OrdinalIgnoreCase)
+                || (a.Description != null && a.Description.Contains(request.Search, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
         var totalCount = filtered.Count;

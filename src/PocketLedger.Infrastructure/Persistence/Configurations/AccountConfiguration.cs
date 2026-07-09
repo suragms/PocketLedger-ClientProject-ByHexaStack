@@ -17,6 +17,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Balance).HasColumnType("decimal(18,2)");
         builder.Property(a => a.Type).HasConversion<int>();
         builder.Property(a => a.IncludeInBalance).HasDefaultValue(true);
+        builder.Property(a => a.IsArchived).HasDefaultValue(false);
         builder.HasOne(a => a.User).WithMany(u => u.Accounts).HasForeignKey(a => a.UserId);
         builder.HasQueryFilter(a => !a.IsDeleted);
 

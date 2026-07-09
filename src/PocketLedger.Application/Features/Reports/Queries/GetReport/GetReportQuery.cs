@@ -25,6 +25,19 @@ public class ReportDto
     public List<BudgetAnalysisDto> BudgetAnalysis { get; set; } = new();
     public List<DailyTrendDto> DailyTrend { get; set; } = new();
     public List<WeeklyComparisonDto> WeeklyComparison { get; set; } = new();
+    public PreviousPeriodComparisonDto? PreviousPeriod { get; set; }
+}
+
+public class PreviousPeriodComparisonDto
+{
+    public string Label { get; set; } = string.Empty;
+    public decimal Income { get; set; }
+    public decimal Expense { get; set; }
+    public decimal NetIncome { get; set; }
+    public double SavingsRate { get; set; }
+    public double IncomeChangePercent { get; set; }
+    public double ExpenseChangePercent { get; set; }
+    public double NetChangePercent { get; set; }
 }
 
 public class MonthlyDataDto

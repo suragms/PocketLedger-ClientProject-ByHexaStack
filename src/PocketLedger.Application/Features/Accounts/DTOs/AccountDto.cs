@@ -16,6 +16,7 @@ public class AccountDto : IMapFrom<Account>
     public string? Color { get; set; }
     public string? Icon { get; set; }
     public bool IncludeInBalance { get; set; }
+    public bool IsArchived { get; set; }
     public int DisplayOrder { get; set; }
     public DateTime CreatedAt { get; set; }
     public int TransactionCount { get; set; }

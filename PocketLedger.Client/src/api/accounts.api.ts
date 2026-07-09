@@ -36,4 +36,14 @@ export const accountsApi = {
     const response = await apiClient.delete(`/accounts/${id}`);
     return response.data;
   },
+
+  archive: async (id: number): Promise<ApiResponse<null>> => {
+    const response = await apiClient.put(`/accounts/${id}/archive`);
+    return response.data;
+  },
+
+  restore: async (id: number): Promise<ApiResponse<null>> => {
+    const response = await apiClient.put(`/accounts/${id}/restore`);
+    return response.data;
+  },
 };

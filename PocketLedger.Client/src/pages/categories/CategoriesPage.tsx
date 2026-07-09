@@ -176,7 +176,6 @@ export default function CategoriesPage() {
     onError: () => toast.error('Failed to restore category'),
   });
 
-  const categories = data?.data || [];
   const selectedColor = watch('color') || '#6366f1';
   const selectedIcon = watch('icon') || 'folder';
   const selectedType = watch('type');
@@ -221,15 +220,18 @@ export default function CategoriesPage() {
     setArchiveDialogOpen(true);
   };
 
+  const categories = data?.data || [];
+
   const tabCounts = useMemo(() => {
+    const cats = data?.data || [];
     return {
-      all: categories.length,
-      income: categories.filter((c) => c.type === 0).length,
-      expense: categories.filter((c) => c.type === 1).length,
-      both: categories.filter((c) => c.type === 2).length,
-      archived: categories.filter((c) => c.isArchived).length,
+      all: cats.length,
+      income: cats.filter((c) => c.type === 0).length,
+      expense: cats.filter((c) => c.type === 1).length,
+      both: cats.filter((c) => c.type === 2).length,
+      archived: cats.filter((c) => c.isArchived).length,
     };
-  }, [categories]);
+  }, [data]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">

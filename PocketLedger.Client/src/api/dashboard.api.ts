@@ -3,15 +3,38 @@ import type { ApiResponse } from '../types';
 
 export interface DashboardSummary {
   totalBalance: number;
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  monthlyNet: number;
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+  savingsRate: number;
   totalAccounts: number;
-  totalTransactionsThisMonth: number;
+  totalTransactions: number;
+  periodLabel: string;
+  periodStart: string;
+  periodEnd: string;
   accounts: AccountSummary[];
   recentTransactions: RecentTransaction[];
   budgetProgress: BudgetProgress[];
   topSpendingCategories: CategorySpending[];
+  previousPeriod?: PeriodComparison;
+  monthlyBreakdown: DashboardMonthlyData[];
+}
+
+export interface DashboardMonthlyData {
+  month: string;
+  income: number;
+  expense: number;
+}
+
+export interface PeriodComparison {
+  income: number;
+  expenses: number;
+  netIncome: number;
+  savingsRate: number;
+  incomeChangePercent: number;
+  expenseChangePercent: number;
+  netChangePercent: number;
+  label: string;
 }
 
 export interface AccountSummary {
@@ -22,6 +45,7 @@ export interface AccountSummary {
   color?: string;
   type: number;
   typeName: string;
+  isArchived?: boolean;
 }
 
 export interface RecentTransaction {
@@ -58,8 +82,12 @@ export interface CategorySpending {
 }
 
 export const dashboardApi = {
-  getSummary: async (): Promise<ApiResponse<DashboardSummary>> => {
-    const response = await apiClient.get('/dashboard/summary');
+  getSummary: async (params?: {
+    period?: string;
+    customStartDate?: string;
+    customEndDate?: string;
+  }): Promise<ApiResponse<DashboardSummary>> => {
+    const response = await apiClient.get('/dashboard/summary', { params });
     return response.data;
   },
 };

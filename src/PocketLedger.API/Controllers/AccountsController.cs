@@ -2,8 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PocketLedger.Application.Common;
+using PocketLedger.Application.Features.Accounts.Commands.ArchiveAccount;
 using PocketLedger.Application.Features.Accounts.Commands.CreateAccount;
 using PocketLedger.Application.Features.Accounts.Commands.DeleteAccount;
+using PocketLedger.Application.Features.Accounts.Commands.RestoreAccount;
 using PocketLedger.Application.Features.Accounts.Commands.UpdateAccount;
 using PocketLedger.Application.Features.Accounts.DTOs;
 using PocketLedger.Application.Features.Accounts.Queries.GetAccountById;
@@ -62,5 +64,19 @@ public class AccountsController : ControllerBase
     {
         await _mediator.Send(new DeleteAccountCommand { Id = id });
         return Ok(ApiResponse<object>.SuccessResponse(null!, "Account deleted successfully."));
+    }
+
+    [HttpPut("{id}/archive")]
+    public async Task<IActionResult> ArchiveAccount(int id)
+    {
+        await _mediator.Send(new ArchiveAccountCommand { Id = id });
+        return Ok(ApiResponse<object>.SuccessResponse(null!, "Account archived successfully."));
+    }
+
+    [HttpPut("{id}/restore")]
+    public async Task<IActionResult> RestoreAccount(int id)
+    {
+        await _mediator.Send(new RestoreAccountCommand { Id = id });
+        return Ok(ApiResponse<object>.SuccessResponse(null!, "Account restored successfully."));
     }
 }

@@ -1,23 +1,42 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import { useAppSelector, useAppDispatch } from '../../app/hooks';
 import { logout } from '../../features/auth/authSlice';
 import { toggleSidebar, toggleDarkMode } from '../../app/uiSlice';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Bars3Icon,
   SunIcon,
   MoonIcon,
   UserCircleIcon,
+  PlusIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import NotificationBell from '../notifications/NotificationBell';
+import QuickAddSheet from '../transactions/QuickAddSheet';
 
 export default function Header() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
   const { darkMode } = useAppSelector((state) => state.ui);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return;
+        if (location.pathname.startsWith('/urlAdmin26')) return;
+        e.preventDefault();
+        navigate('/transactions/new');
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate, location.pathname]);
+
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -35,6 +54,15 @@ export default function Header() {
       </button>
 
       <div className="flex-1" />
+
+      <button
+        onClick={() => setShowQuickAdd(true)}
+        className="hidden md:inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+        aria-label="Add transaction"
+      >
+        <PlusIcon className="h-4 w-4" aria-hidden="true" />
+        <span>Add</span>
+      </button>
 
       <button
         onClick={() => dispatch(toggleDarkMode())}
@@ -94,6 +122,7 @@ export default function Header() {
           </Menu.Items>
         </Transition>
       </Menu>
+      <QuickAddSheet isOpen={showQuickAdd} onClose={() => setShowQuickAdd(false)} />
     </header>
   );
 }

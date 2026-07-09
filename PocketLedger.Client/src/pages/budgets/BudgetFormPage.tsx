@@ -71,6 +71,8 @@ export default function BudgetFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['budget-analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       toast.success(isEdit ? 'Budget updated' : 'Budget created');
       navigate('/budgets');
     },

@@ -103,6 +103,7 @@ export interface Account {
   color?: string;
   icon?: string;
   includeInBalance: boolean;
+  isArchived: boolean;
   displayOrder: number;
   createdAt: string;
   transactionCount: number;
@@ -255,17 +256,40 @@ export interface CategorySpendingDto {
   percentage: number;
 }
 
+export interface PeriodComparison {
+  income: number;
+  expenses: number;
+  netIncome: number;
+  savingsRate: number;
+  incomeChangePercent: number;
+  expenseChangePercent: number;
+  netChangePercent: number;
+  label: string;
+}
+
 export interface DashboardSummary {
   totalBalance: number;
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  monthlyNet: number;
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+  savingsRate: number;
   totalAccounts: number;
-  totalTransactionsThisMonth: number;
+  totalTransactions: number;
+  periodLabel: string;
+  periodStart: string;
+  periodEnd: string;
   accounts: AccountSummary[];
   recentTransactions: RecentTransaction[];
   budgetProgress: BudgetProgress[];
   topSpendingCategories: CategorySpending[];
+  previousPeriod?: PeriodComparison;
+  monthlyBreakdown: DashboardMonthlyData[];
+}
+
+export interface DashboardMonthlyData {
+  month: string;
+  income: number;
+  expense: number;
 }
 
 export interface AccountSummary {
@@ -366,6 +390,18 @@ export interface Report {
   budgetAnalysis: BudgetAnalysisReport[];
   dailyTrend: DailyTrend[];
   weeklyComparison: WeeklyComparison[];
+  previousPeriod?: ReportPeriodComparison;
+}
+
+export interface ReportPeriodComparison {
+  label: string;
+  income: number;
+  expense: number;
+  netIncome: number;
+  savingsRate: number;
+  incomeChangePercent: number;
+  expenseChangePercent: number;
+  netChangePercent: number;
 }
 
 export interface ReportMonthlyData {

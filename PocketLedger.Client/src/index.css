@@ -153,6 +153,51 @@
   }
 }
 
+@layer utilities {
+  .page-max {
+    @apply mx-auto w-full max-w-7xl;
+  }
+  .page-padding {
+    @apply px-4 md:px-6 lg:px-8;
+  }
+  .content-padding {
+    @apply p-4 md:p-6 lg:p-8;
+  }
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px] flex items-center justify-center;
+  }
+  .chart-min-height {
+    min-height: 200px;
+  }
+  .chart-desktop-height {
+    min-height: 350px;
+  }
+  .card-dense {
+    @apply p-3 md:p-4;
+  }
+  .text-responsive {
+    @apply text-xs md:text-sm;
+  }
+  .text-responsive-lg {
+    @apply text-sm md:text-lg;
+  }
+  .text-responsive-xl {
+    @apply text-base md:text-xl lg:text-2xl;
+  }
+  .gap-responsive {
+    @apply gap-3 md:gap-4 lg:gap-6;
+  }
+  .safe-area-t {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-area-l {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .safe-area-r {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
