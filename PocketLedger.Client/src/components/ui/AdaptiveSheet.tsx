@@ -39,10 +39,10 @@ export default function AdaptiveSheet({ isOpen, onClose, title, description, chi
         <Dialog as="div" className="relative z-50" onClose={onClose}>
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
+            enter="ease-standard duration-normal"
             enterFrom="opacity-0"
             enterTo="opacity-100"
-            leave="ease-in duration-200"
+            leave="ease-standard duration-fast"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
@@ -53,10 +53,10 @@ export default function AdaptiveSheet({ isOpen, onClose, title, description, chi
             <div className="flex min-h-full items-end justify-center">
               <Transition.Child
                 as={Fragment}
-                enter="ease-out duration-300"
+                enter="ease-standard duration-normal"
                 enterFrom="translate-y-full"
                 enterTo="translate-y-0"
-                leave="ease-in duration-200"
+                leave="ease-standard duration-fast"
                 leaveFrom="translate-y-0"
                 leaveTo="translate-y-full"
               >
@@ -101,10 +101,10 @@ export default function AdaptiveSheet({ isOpen, onClose, title, description, chi
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <Transition.Child
           as={Fragment}
-          enter="ease-out duration-300"
+          enter="ease-standard duration-normal"
           enterFrom="opacity-0"
           enterTo="opacity-100"
-          leave="ease-in duration-200"
+          leave="ease-standard duration-fast"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
@@ -115,10 +115,10 @@ export default function AdaptiveSheet({ isOpen, onClose, title, description, chi
           <div className="flex min-h-full items-center justify-center p-4">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
+              enter="ease-standard duration-normal"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
+              leave="ease-standard duration-fast"
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >

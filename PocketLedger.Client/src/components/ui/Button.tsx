@@ -20,18 +20,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-xs rounded-md',
-      md: 'h-10 px-4 py-2 text-sm rounded-lg',
-      lg: 'h-12 px-6 text-base rounded-lg',
+      sm: 'h-8 px-3 text-xs rounded-lg',
+      md: 'h-10 px-4 py-2 text-sm rounded-xl',
+      lg: 'h-12 px-6 text-base rounded-xl',
     };
 
     return (
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center font-medium transition-colors',
+          'inline-flex items-center justify-center font-medium transition-all duration-fast ease-standard',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
+          'active:scale-[0.98] select-none touch-manipulation',
           variants[variant],
           sizes[size],
           className

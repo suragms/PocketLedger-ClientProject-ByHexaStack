@@ -7,7 +7,7 @@ import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
-import AdaptiveSheet from '../ui/AdaptiveSheet';
+import MobileFilterSheet from './MobileFilterSheet';
 import { TRANSACTION_TYPES, SORT_OPTIONS } from '../../lib/constants';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { TransactionFilters } from '../../types';
@@ -190,21 +190,13 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
       )}
 
       {/* Mobile: Bottom Sheet Filter */}
-      <AdaptiveSheet
+      <MobileFilterSheet
         isOpen={showSheet}
         onClose={() => setShowSheet(false)}
-        title="Filters"
-        description={`${activeFilterCount} active filter${activeFilterCount !== 1 ? 's' : ''}`}
-        size="lg"
-      >
-        <div className="space-y-4">
-          {filterContent}
-          <div className="flex gap-3 pt-2">
-            <Button className="flex-1" onClick={() => { setShowSheet(false); }}>Apply</Button>
-            <Button variant="outline" onClick={() => { onClear(); setShowSheet(false); }}>Clear All</Button>
-          </div>
-        </div>
-      </AdaptiveSheet>
+        filters={filters}
+        onFiltersChange={onFiltersChange}
+        onClear={onClear}
+      />
 
       {/* Active Filter Badges */}
       {activeFilterCount > 0 && !isExpanded && !isMobile && (

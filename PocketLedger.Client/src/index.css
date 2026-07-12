@@ -19,13 +19,27 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 243 75% 59%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
     --sidebar-bg: 243 75% 59%;
     --sidebar-text: 0 0% 100%;
     --sidebar-hover: 243 60% 64%;
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
     --info: 217 91% 60%;
+
+    /* Shadow scale */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+
+    /* Motion tokens */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+
+    /* Safe area */
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .dark {
@@ -49,6 +63,12 @@
     --sidebar-bg: 224.7 52.6% 12.5%;
     --sidebar-text: 210 40% 98%;
     --sidebar-hover: 215 28.9% 18.5%;
+
+    /* Shadow scale — deeper for dark backgrounds */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2);
   }
 }
 
@@ -135,7 +155,32 @@
     @apply text-[hsl(var(--info))];
   }
   .safe-area-pb {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--safe-area-bottom);
+  }
+
+  /* Shadow utilities */
+  .shadow-token-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .shadow-token-md {
+    box-shadow: var(--shadow-md);
+  }
+  .shadow-token-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  .shadow-token-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Motion utilities */
+  .ease-standard {
+    transition-timing-function: var(--ease-standard);
+  }
+  .duration-fast {
+    transition-duration: var(--duration-fast);
+  }
+  .duration-normal {
+    transition-duration: var(--duration-normal);
   }
   .scrollbar-thin {
     scrollbar-width: thin;

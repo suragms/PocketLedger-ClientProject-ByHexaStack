@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { reportsApi } from '../../api/reports.api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
 import Skeleton from '../../components/ui/Skeleton';
 import Badge from '../../components/ui/Badge';
-import { formatCurrency, formatPercent } from '../../lib/utils';
-import { REPORT_PERIODS } from '../../lib/constants';
+import EmptyState from '../../components/shared/EmptyState';
+import MobileDateRangeSheet from '../../components/reports/MobileDateRangeSheet';
+import type { DateRange } from '../../components/reports/MobileDateRangeSheet';
+import { formatCurrency, formatPercent, cn } from '../../lib/utils';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area, RadarChart, Radar,
@@ -23,10 +26,19 @@ import {
   BanknotesIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  CalendarDaysIcon,
+  ChartBarSquareIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6'];
+
+function formatLocalDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 function ChangeIndicator({ value, inverse, label, isRateDiff }: { value: number; inverse: boolean; label: string; isRateDiff?: boolean }) {
   const isGood = isRateDiff ? value >= 0 : inverse ? value <= 0 : value >= 0;
@@ -51,21 +63,98 @@ function ChangeIndicator({ value, inverse, label, isRateDiff }: { value: number;
   );
 }
 
+interface TouchLegendProps {
+  payload?: Array<{ value: string; color: string; type?: string }>;
+  hiddenSeries: Record<string, boolean>;
+  onToggle: (key: string) => void;
+}
+
+function TouchLegend({ payload, hiddenSeries, onToggle }: TouchLegendProps) {
+  if (!payload?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2 justify-center mt-3">
+      {payload.map((entry) => (
+        <button
+          key={entry.value}
+          onClick={() => onToggle(entry.value)}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 min-h-[36px]',
+            hiddenSeries[entry.value]
+              ? 'bg-muted text-muted-foreground opacity-50'
+              : 'bg-muted text-foreground active:scale-95'
+          )}
+          aria-label={`Toggle ${entry.value}`}
+        >
+          <div
+            className={cn(
+              'w-2.5 h-2.5 rounded-full shrink-0 transition-opacity',
+              hiddenSeries[entry.value] && 'opacity-40'
+            )}
+            style={{ backgroundColor: entry.color }}
+          />
+          {entry.value}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 const formatTooltip = (value: number) => formatCurrency(value);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tooltipFormatter = formatTooltip as any;
 
-export default function ReportsPage() {
-  const [period, setPeriod] = useState('monthly');
-  const [customStart, setCustomStart] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 12);
-    return d.toISOString().split('T')[0];
-  });
-  const [customEnd, setCustomEnd] = useState(() => new Date().toISOString().split('T')[0]);
+const PERIOD_TABS = [
+  { value: 'this_month', label: 'This Month' },
+  { value: 'last_month', label: 'Last Month' },
+  { value: 'custom', label: 'Custom' },
+] as const;
 
-  const startDate = period === 'custom' ? customStart : undefined;
-  const endDate = period === 'custom' ? customEnd : undefined;
+export default function ReportsPage() {
+  const isMobile = useMediaQuery('(max-width: 767px)');
+  const [activeTab, setActiveTab] = useState<string>('this_month');
+  const [dateRangeSheetOpen, setDateRangeSheetOpen] = useState(false);
+
+  const [customRange, setCustomRange] = useState<DateRange>({
+    startDate: formatLocalDate(startOfMonth(subMonths(new Date(), 3))),
+    endDate: formatLocalDate(endOfMonth(new Date())),
+    label: 'Last 3 Months',
+  });
+
+  const [hiddenSeries, setHiddenSeries] = useState<Record<string, boolean>>({});
+
+  const toggleSeries = useCallback((key: string) => {
+    setHiddenSeries((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const getDateRange = useCallback(() => {
+    const now = new Date();
+    switch (activeTab) {
+      case 'this_month':
+        return {
+          period: 'monthly',
+          startDate: formatLocalDate(startOfMonth(now)),
+          endDate: formatLocalDate(endOfMonth(now)),
+        };
+      case 'last_month': {
+        const lastMonth = subMonths(now, 1);
+        return {
+          period: 'monthly',
+          startDate: formatLocalDate(startOfMonth(lastMonth)),
+          endDate: formatLocalDate(endOfMonth(lastMonth)),
+        };
+      }
+      case 'custom':
+        return {
+          period: 'custom',
+          startDate: customRange.startDate,
+          endDate: customRange.endDate,
+        };
+      default:
+        return { period: 'monthly' };
+    }
+  }, [activeTab, customRange]);
+
+  const { period, startDate, endDate } = getDateRange();
 
   const { data, isLoading } = useQuery({
     queryKey: ['reports', period, startDate, endDate],
@@ -96,7 +185,14 @@ export default function ReportsPage() {
     toast.success(`Exported ${filename}`);
   };
 
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    setCustomRange(range);
+    setActiveTab('custom');
+  }, []);
+
   const report = data?.data;
+
+  const isEmpty = !isLoading && report && report.monthlyBreakdown.length === 0 && report.categoryBreakdown.length === 0;
 
   if (isLoading) {
     return (
@@ -105,13 +201,104 @@ export default function ReportsPage() {
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Skeleton className="h-12 w-full rounded-xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-80 w-full rounded-xl" />)}
         </div>
       </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Reports</h1>
+            <p className="text-muted-foreground">Analyze your financial data</p>
+          </div>
+        </div>
+
+        {isMobile ? (
+          <div className="inline-flex rounded-xl bg-muted p-0.5 w-full">
+            {PERIOD_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => {
+                  if (tab.value === 'custom') {
+                    setDateRangeSheetOpen(true);
+                  } else {
+                    setActiveTab(tab.value);
+                  }
+                }}
+                className={cn(
+                  'flex-1 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 min-h-[44px]',
+                  activeTab === tab.value
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-center gap-3">
+                {PERIOD_TABS.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => {
+                      if (tab.value === 'custom') {
+                        setActiveTab(tab.value);
+                      } else {
+                        setActiveTab(tab.value);
+                      }
+                    }}
+                    className={cn(
+                      'flex flex-col items-center gap-1 px-4 py-2.5 rounded-lg border-2 transition-all text-center',
+                      activeTab === tab.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                    )}
+                  >
+                    <span className="text-sm font-medium">{tab.label}</span>
+                  </button>
+                ))}
+                {activeTab === 'custom' && (
+                  <div className="flex items-center gap-2 ml-4">
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(customRange.startDate), 'MMM d')} – {format(new Date(customRange.endDate), 'MMM d, yyyy')}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={() => setDateRangeSheetOpen(true)}>
+                      <CalendarDaysIcon className="h-4 w-4 mr-1" />Change
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <EmptyState
+          icon={<ChartBarSquareIcon className="h-16 w-16" />}
+          title="No data for this period"
+          description="Try selecting a different time range or start tracking your income and expenses to see reports here."
+          actionLabel="Select Different Period"
+          onAction={() => setActiveTab('this_month')}
+        />
+
+        <MobileDateRangeSheet
+          isOpen={dateRangeSheetOpen}
+          onClose={() => setDateRangeSheetOpen(false)}
+          value={customRange}
+          onChange={handleDateRangeChange}
+        />
+      </motion.div>
     );
   }
 
@@ -136,33 +323,67 @@ export default function ReportsPage() {
       </div>
 
       {/* Period Selector */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            {REPORT_PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`flex flex-col items-center gap-1 px-4 py-2.5 rounded-lg border-2 transition-all text-center ${
-                  period === p.value
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
-                }`}
-              >
-                <span className="text-sm font-medium">{p.label}</span>
-                <span className="text-[10px]">{p.description}</span>
-              </button>
-            ))}
-            {period === 'custom' && (
-              <div className="flex items-center gap-2 ml-4">
-                <Input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="w-40 h-9" />
-                <span className="text-muted-foreground">to</span>
-                <Input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} className="w-40 h-9" />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {isMobile ? (
+        <div className="inline-flex rounded-xl bg-muted p-0.5 w-full">
+          {PERIOD_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => {
+                if (tab.value === 'custom') {
+                  setDateRangeSheetOpen(true);
+                } else {
+                  setActiveTab(tab.value);
+                }
+              }}
+              className={cn(
+                'flex-1 rounded-lg py-2.5 text-sm font-medium transition-all duration-200 min-h-[44px]',
+                activeTab === tab.value
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {PERIOD_TABS.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => {
+                    if (tab.value === 'custom') {
+                      setActiveTab(tab.value);
+                    } else {
+                      setActiveTab(tab.value);
+                    }
+                  }}
+                  className={cn(
+                    'flex flex-col items-center gap-1 px-4 py-2.5 rounded-lg border-2 transition-all text-center',
+                    activeTab === tab.value
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border hover:border-muted-foreground/30 text-muted-foreground'
+                  )}
+                >
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
+              ))}
+              {activeTab === 'custom' && (
+                <div className="flex items-center gap-2 ml-4">
+                  <span className="text-sm text-muted-foreground">
+                    {format(new Date(customRange.startDate), 'MMM d')} – {format(new Date(customRange.endDate), 'MMM d, yyyy')}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => setDateRangeSheetOpen(true)}>
+                    <CalendarDaysIcon className="h-4 w-4 mr-1" />Change
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
@@ -229,17 +450,27 @@ export default function ReportsPage() {
             {report.monthlyBreakdown.length === 0 ? (
               <p className="text-muted-foreground text-center py-12">No data for this period</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
                 <BarChart data={report.monthlyBreakdown}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" fontSize={11} tickLine={false} />
-                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
+                  <XAxis dataKey="month" fontSize={isMobile ? 10 : 11} tickLine={false} interval={isMobile ? 'preserveStartEnd' : 0} />
+                  <YAxis fontSize={isMobile ? 10 : 11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} width={isMobile ? 35 : 40} />
                   <Tooltip formatter={tooltipFormatter} />
-                  <Legend />
-                  <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  {!isMobile && <Legend />}
+                  <Bar dataKey="income" name="Income" fill="#22c55e" radius={[4, 4, 0, 0]} hide={hiddenSeries['Income']} />
+                  <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} hide={hiddenSeries['Expense']} />
                 </BarChart>
               </ResponsiveContainer>
+            )}
+            {isMobile && report.monthlyBreakdown.length > 0 && (
+              <TouchLegend
+                payload={[
+                  { value: 'Income', color: '#22c55e' },
+                  { value: 'Expense', color: '#ef4444' },
+                ]}
+                hiddenSeries={hiddenSeries}
+                onToggle={toggleSeries}
+              />
             )}
           </CardContent>
         </Card>
@@ -253,7 +484,7 @@ export default function ReportsPage() {
             {report.categoryBreakdown.length === 0 ? (
               <p className="text-muted-foreground text-center py-12">No spending data</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
                 <PieChart>
                   <Pie
                     data={report.categoryBreakdown}
@@ -261,7 +492,7 @@ export default function ReportsPage() {
                     nameKey="categoryName"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={isMobile ? 80 : 100}
                     paddingAngle={2}
                   >
                     {report.categoryBreakdown.map((_, i) => (
@@ -271,6 +502,16 @@ export default function ReportsPage() {
                   <Tooltip formatter={tooltipFormatter} />
                 </PieChart>
               </ResponsiveContainer>
+            )}
+            {isMobile && report.categoryBreakdown.length > 0 && (
+              <TouchLegend
+                payload={report.categoryBreakdown.map((c, i) => ({
+                  value: c.categoryName,
+                  color: c.color || COLORS[i % COLORS.length],
+                }))}
+                hiddenSeries={hiddenSeries}
+                onToggle={toggleSeries}
+              />
             )}
           </CardContent>
         </Card>
@@ -284,17 +525,27 @@ export default function ReportsPage() {
             {report.monthlyBreakdown.length === 0 ? (
               <p className="text-muted-foreground text-center py-12">No data</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
                 <AreaChart data={report.monthlyBreakdown}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" fontSize={11} tickLine={false} />
-                  <YAxis fontSize={11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} />
+                  <XAxis dataKey="month" fontSize={isMobile ? 10 : 11} tickLine={false} interval={isMobile ? 'preserveStartEnd' : 0} />
+                  <YAxis fontSize={isMobile ? 10 : 11} tickLine={false} tickFormatter={(v) => `${(Number(v) / 1000).toFixed(0)}k`} width={isMobile ? 35 : 40} />
                   <Tooltip formatter={tooltipFormatter} />
-                  <Area type="monotone" dataKey="income" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} name="Income" />
-                  <Area type="monotone" dataKey="expense" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Expense" />
-                  <Legend />
+                  <Area type="monotone" dataKey="income" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} name="Income" hide={hiddenSeries['Income']} />
+                  <Area type="monotone" dataKey="expense" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} name="Expense" hide={hiddenSeries['Expense']} />
+                  {!isMobile && <Legend />}
                 </AreaChart>
               </ResponsiveContainer>
+            )}
+            {isMobile && report.monthlyBreakdown.length > 0 && (
+              <TouchLegend
+                payload={[
+                  { value: 'Income', color: '#22c55e' },
+                  { value: 'Expense', color: '#ef4444' },
+                ]}
+                hiddenSeries={hiddenSeries}
+                onToggle={toggleSeries}
+              />
             )}
           </CardContent>
         </Card>
@@ -308,18 +559,29 @@ export default function ReportsPage() {
             {report.walletAnalysis.length === 0 ? (
               <p className="text-muted-foreground text-center py-12">No wallet data</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={isMobile ? 260 : 300}>
                 <RadarChart data={report.walletAnalysis}>
                   <PolarGrid />
-                  <PolarAngleAxis dataKey="accountName" fontSize={11} />
-                  <PolarRadiusAxis fontSize={10} />
-                  <Radar name="Balance" dataKey="balance" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
-                  <Radar name="Income" dataKey="totalIncome" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} />
-                  <Radar name="Expense" dataKey="totalExpense" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} />
-                  <Legend />
+                  <PolarAngleAxis dataKey="accountName" fontSize={isMobile ? 9 : 11} />
+                  <PolarRadiusAxis fontSize={isMobile ? 9 : 10} />
+                  <Radar name="Balance" dataKey="balance" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} hide={hiddenSeries['Balance']} />
+                  <Radar name="Income" dataKey="totalIncome" stroke="#22c55e" fill="#22c55e" fillOpacity={0.2} hide={hiddenSeries['Income']} />
+                  <Radar name="Expense" dataKey="totalExpense" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} hide={hiddenSeries['Expense']} />
+                  {!isMobile && <Legend />}
                   <Tooltip formatter={tooltipFormatter} />
                 </RadarChart>
               </ResponsiveContainer>
+            )}
+            {isMobile && report.walletAnalysis.length > 0 && (
+              <TouchLegend
+                payload={[
+                  { value: 'Balance', color: '#6366f1' },
+                  { value: 'Income', color: '#22c55e' },
+                  { value: 'Expense', color: '#ef4444' },
+                ]}
+                hiddenSeries={hiddenSeries}
+                onToggle={toggleSeries}
+              />
             )}
           </CardContent>
         </Card>
@@ -373,30 +635,49 @@ export default function ReportsPage() {
           <CardTitle className="text-lg">Monthly Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Month</th>
-                  <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Income</th>
-                  <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Expense</th>
-                  <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Net</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {report.monthlyBreakdown.map((m) => (
-                  <tr key={m.month} className="hover:bg-muted/30">
-                    <td className="py-3 px-4 font-medium">{m.month}</td>
-                    <td className="py-3 px-4 text-right text-green-600">{formatCurrency(m.income)}</td>
-                    <td className="py-3 px-4 text-right text-red-600">{formatCurrency(m.expense)}</td>
-                    <td className={`py-3 px-4 text-right font-medium ${m.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {isMobile ? (
+            <div className="space-y-3">
+              {report.monthlyBreakdown.map((m) => (
+                <div key={m.month} className="p-3 rounded-xl bg-muted/50 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{m.month}</span>
+                    <span className={`text-sm font-semibold ${m.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(m.net)}
-                    </td>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="text-green-600">+{formatCurrency(m.income)}</span>
+                    <span className="text-red-600">-{formatCurrency(m.expense)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Month</th>
+                    <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Income</th>
+                    <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Expense</th>
+                    <th className="text-right py-3 px-4 font-semibold text-muted-foreground">Net</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {report.monthlyBreakdown.map((m) => (
+                    <tr key={m.month} className="hover:bg-muted/30">
+                      <td className="py-3 px-4 font-medium">{m.month}</td>
+                      <td className="py-3 px-4 text-right text-green-600">{formatCurrency(m.income)}</td>
+                      <td className="py-3 px-4 text-right text-red-600">{formatCurrency(m.expense)}</td>
+                      <td className={`py-3 px-4 text-right font-medium ${m.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(m.net)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -434,6 +715,14 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile Date Range Sheet */}
+      <MobileDateRangeSheet
+        isOpen={dateRangeSheetOpen}
+        onClose={() => setDateRangeSheetOpen(false)}
+        value={customRange}
+        onChange={handleDateRangeChange}
+      />
     </motion.div>
   );
 }

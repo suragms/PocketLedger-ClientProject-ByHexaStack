@@ -4,9 +4,10 @@ import { accountsApi } from '../../api/accounts.api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
+import EmptyState from '../../components/shared/EmptyState';
 import { formatCurrency } from '../../lib/utils';
 import { ACCOUNT_TYPES } from '../../lib/constants';
-import { PencilIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, ArrowLeftIcon, WalletIcon } from '@heroicons/react/24/outline';
 
 export default function AccountDetailPage() {
   const { id } = useParams();
@@ -19,7 +20,15 @@ export default function AccountDetailPage() {
   const account = data?.data;
 
   if (isLoading) return <div className="space-y-4"><Skeleton className="h-12 w-48" /><Skeleton className="h-64 w-full" /></div>;
-  if (!account) return <p className="text-muted-foreground">Account not found</p>;
+  if (!account) return (
+    <EmptyState
+      icon={<WalletIcon className="h-12 w-12" />}
+      title="Account not found"
+      description="This account may have been deleted or doesn't exist."
+      actionLabel="Back to Accounts"
+      onAction={() => window.location.href = '/accounts'}
+    />
+  );
 
   return (
     <div className="space-y-6">

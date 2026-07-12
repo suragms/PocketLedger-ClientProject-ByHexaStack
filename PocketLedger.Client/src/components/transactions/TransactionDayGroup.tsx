@@ -1,15 +1,18 @@
 import { formatCurrency } from '../../lib/utils';
 import TransactionItem from './TransactionItem';
+import SwipeableRow from './SwipeableRow';
 import type { Transaction } from '../../types';
 
 interface TransactionDayGroupProps {
   date: string;
   transactions: Transaction[];
   onDelete?: (id: number) => void;
+  onEdit?: (id: number) => void;
   viewMode?: 'table' | 'card';
+  swipeable?: boolean;
 }
 
-export default function TransactionDayGroup({ date, transactions, onDelete, viewMode = 'table' }: TransactionDayGroupProps) {
+export default function TransactionDayGroup({ date, transactions, onDelete, onEdit, viewMode = 'table', swipeable = false }: TransactionDayGroupProps) {
   const dayIncome = transactions.filter((t) => t.type === 0).reduce((sum, t) => sum + t.amount, 0);
   const dayExpense = transactions.filter((t) => t.type === 1).reduce((sum, t) => sum + t.amount, 0);
   const net = dayIncome - dayExpense;
@@ -28,16 +31,32 @@ export default function TransactionDayGroup({ date, transactions, onDelete, view
   if (viewMode === 'card') {
     return (
       <div className="space-y-2">
-        <div className="flex items-center justify-between px-1 sticky top-0 bg-background/80 backdrop-blur-sm z-10 py-2">
+        <div className="flex items-center justify-between px-1 sticky top-[env(safe-area-inset-top,0px)] md:top-16 bg-background/80 backdrop-blur-sm z-10 py-2">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{dateLabel}</span>
           <span className={`text-xs font-medium ${net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {net >= 0 ? '+' : ''}{formatCurrency(Math.abs(net))}
           </span>
         </div>
         <div className="space-y-2">
-          {transactions.map((t) => (
-            <TransactionItem key={t.id} transaction={t} onDelete={onDelete} viewMode="card" />
-          ))}
+          {transactions.map((t) => {
+            const item = (
+              <TransactionItem key={t.id} transaction={t} onDelete={onDelete} viewMode="card" />
+            );
+
+            if (swipeable && onEdit) {
+              return (
+                <SwipeableRow
+                  key={t.id}
+                  onEdit={() => onEdit(t.id)}
+                  onDelete={() => onDelete?.(t.id)}
+                >
+                  {item}
+                </SwipeableRow>
+              );
+            }
+
+            return <div key={t.id}>{item}</div>;
+          })}
         </div>
       </div>
     );

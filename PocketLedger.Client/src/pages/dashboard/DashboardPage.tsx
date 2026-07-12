@@ -18,6 +18,10 @@ import {
   PlusIcon,
   ArrowUpIcon,
   ArrowDownIcon,
+  ChartBarIcon,
+  ReceiptPercentIcon,
+  CurrencyDollarIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/24/outline';
 import {
   Tooltip,
@@ -184,7 +188,16 @@ export default function DashboardPage() {
               {isLoading ? (
                 <Skeleton className="h-64 w-full" />
               ) : !summary?.topSpendingCategories?.length ? (
-                <p className="text-muted-foreground text-center py-12">No spending data yet</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <ReceiptPercentIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium mb-1">No spending data yet</p>
+                  <p className="text-xs text-muted-foreground mb-3">Start tracking expenses to see category breakdowns</p>
+                  <Link to="/transactions/new">
+                    <Button size="sm"><PlusIcon className="h-4 w-4 mr-1" />Add Transaction</Button>
+                  </Link>
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart className="chart-min-height">
@@ -227,7 +240,16 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : !summary?.budgetProgress?.length ? (
-                <p className="text-muted-foreground text-center py-12">No budgets set</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <CurrencyDollarIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium mb-1">No budgets set</p>
+                  <p className="text-xs text-muted-foreground mb-3">Create a budget to start managing your spending</p>
+                  <Link to="/budgets/new">
+                    <Button size="sm"><PlusIcon className="h-4 w-4 mr-1" />Create Budget</Button>
+                  </Link>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {summary.budgetProgress.slice(0, 5).map((budget) => {
@@ -286,7 +308,13 @@ export default function DashboardPage() {
             {isLoading ? (
               <Skeleton className="h-64 w-full" />
             ) : !summary?.monthlyBreakdown?.length ? (
-              <p className="text-muted-foreground text-center py-12">No data for this period</p>
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <ChartBarIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium mb-1">No data for this period</p>
+                <p className="text-xs text-muted-foreground">Try selecting a different time range</p>
+              </div>
             ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={summary.monthlyBreakdown}>
@@ -322,7 +350,16 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : !summary?.recentTransactions?.length ? (
-                <p className="text-muted-foreground text-center py-8">No transactions yet</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <ClipboardDocumentListIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium mb-1">No transactions yet</p>
+                  <p className="text-xs text-muted-foreground mb-3">Record your first income or expense</p>
+                  <Link to="/transactions/new">
+                    <Button size="sm"><PlusIcon className="h-4 w-4 mr-1" />Add Transaction</Button>
+                  </Link>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {summary.recentTransactions.slice(0, 5).map((t) => (
@@ -383,7 +420,16 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : !summary?.accounts?.length ? (
-                <p className="text-muted-foreground text-center py-8">No accounts yet</p>
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <WalletIcon className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium mb-1">No accounts yet</p>
+                  <p className="text-xs text-muted-foreground mb-3">Add a wallet or bank account to get started</p>
+                  <Link to="/accounts/new">
+                    <Button size="sm"><PlusIcon className="h-4 w-4 mr-1" />Add Account</Button>
+                  </Link>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {summary.accounts.map((a) => (

@@ -11,8 +11,10 @@ import EmptyState from '../../components/shared/EmptyState';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import TransactionFilterPanel from '../../components/transactions/TransactionFilterPanel';
 import TransactionDayGroup from '../../components/transactions/TransactionDayGroup';
+import ScrollToTopButton from '../../components/transactions/ScrollToTopButton';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatCurrency } from '../../lib/utils';
 import {
   PlusIcon,
@@ -24,18 +26,25 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import type { Transaction, TransactionFilters } from '../../types';
 
 export default function TransactionsPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<TransactionFilters>({});
   const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'card'>(isMobile ? 'card' : 'table');
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => {
+    setViewMode(isMobile ? 'card' : 'table');
+  }, [isMobile]);
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['transactions', page, debouncedSearch, filters],
@@ -56,7 +65,6 @@ export default function TransactionsPage() {
     enabled: showDeleted,
   });
 
-  // Accumulate pages for infinite scroll
   useEffect(() => {
     if (data?.items) {
       if (page === 1) {
@@ -71,7 +79,6 @@ export default function TransactionsPage() {
     }
   }, [data, page]);
 
-  // Reset on filter/search change
   useEffect(() => {
     setPage(1);
     setAllTransactions([]);
@@ -147,7 +154,6 @@ export default function TransactionsPage() {
     filters.search,
   ].filter(Boolean).length;
 
-  // Group by date
   const groupedTransactions = transactions.reduce<Record<string, Transaction[]>>((acc, t) => {
     const dateKey = t.date.split('T')[0];
     if (!acc[dateKey]) acc[dateKey] = [];
@@ -157,6 +163,10 @@ export default function TransactionsPage() {
 
   const totalIncome = transactions.filter((t) => t.type === 0).reduce((sum, t) => sum + t.amount, 0);
   const totalExpense = transactions.filter((t) => t.type === 1).reduce((sum, t) => sum + t.amount, 0);
+
+  const handleEdit = (id: number) => {
+    navigate(`/transactions/${id}/edit`);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -361,7 +371,9 @@ export default function TransactionsPage() {
                 const t = transactions.find((tx) => tx.id === id);
                 if (t) setDeleteTarget(t);
               }}
+              onEdit={handleEdit}
               viewMode="card"
+              swipeable={isMobile}
             />
           ))}
           {hasMore && (
@@ -376,6 +388,8 @@ export default function TransactionsPage() {
           )}
         </div>
       )}
+
+      <ScrollToTopButton />
 
       {/* Delete Confirmation */}
       <ConfirmDialog

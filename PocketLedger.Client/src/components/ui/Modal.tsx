@@ -24,10 +24,10 @@ export default function Modal({ isOpen, onClose, title, description, children, s
     <Transition appear show={isOpen}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         <TransitionChild
-          enter="ease-out duration-300"
+          enter="ease-standard duration-normal"
           enterFrom="opacity-0"
           enterTo="opacity-100"
-          leave="ease-in duration-200"
+          leave="ease-standard duration-fast"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
@@ -36,10 +36,10 @@ export default function Modal({ isOpen, onClose, title, description, children, s
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             <TransitionChild
-              enter="ease-out duration-300"
+              enter="ease-standard duration-normal"
               enterFrom="opacity-0 scale-95"
               enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
+              leave="ease-standard duration-fast"
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >

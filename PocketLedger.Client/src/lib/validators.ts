@@ -98,8 +98,8 @@ export type PinLoginInput = z.infer<typeof pinLoginSchema>;
 export const accountSchema = z.object({
   name: z.string().min(1, 'Account name is required').max(100),
   description: z.string().max(500).optional(),
-  type: z.number().min(0).max(6),
-  balance: z.number().min(0, 'Balance cannot be negative'),
+  type: z.coerce.number().min(0).max(8),
+  balance: z.coerce.number().min(0, 'Balance cannot be negative'),
   currency: z.string().length(3, 'Currency must be 3 characters').default('USD'),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
   icon: z.string().max(50).optional(),
@@ -107,16 +107,16 @@ export const accountSchema = z.object({
 });
 
 export const transactionSchema = z.object({
-  amount: z.number().positive('Amount must be greater than 0'),
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
   currency: z.string().length(3).default('USD'),
-  type: z.number().min(0).max(2),
+  type: z.coerce.number().min(0).max(2),
   date: z.string().min(1, 'Date is required'),
   note: z.string().max(500).optional(),
   payee: z.string().max(200).optional(),
   reference: z.string().max(100).optional(),
-  paymentMethod: z.number().min(0).max(6).default(0),
-  accountId: z.number().positive('Account is required'),
-  categoryId: z.number().positive().optional().nullable(),
+  paymentMethod: z.coerce.number().min(0).max(6).default(0),
+  accountId: z.coerce.number().positive('Account is required'),
+  categoryId: z.coerce.number().positive().optional().nullable(),
   tagIds: z.array(z.number()).optional(),
 });
 
@@ -138,21 +138,21 @@ export const categorySchema = z.object({
   description: z.string().max(500).optional(),
   icon: z.string().default('folder'),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').default('#6366f1'),
-  type: z.number().min(0).max(2).default(2),
-  parentId: z.number().optional().nullable(),
+  type: z.coerce.number().min(0).max(2).default(2),
+  parentId: z.coerce.number().optional().nullable(),
 });
 
 export const budgetSchema = z.object({
   name: z.string().min(1, 'Budget name is required').max(100),
-  amount: z.number().positive('Budget amount must be greater than 0'),
+  amount: z.coerce.number().positive('Budget amount must be greater than 0'),
   currency: z.string().length(3).default('USD'),
-  period: z.number().min(0).max(3),
+  period: z.coerce.number().min(0).max(3),
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().optional().nullable(),
-  alertThreshold: z.number().min(0).max(100).optional().nullable(),
+  alertThreshold: z.coerce.number().min(0).max(100).optional().nullable(),
   notifyOnAlert: z.boolean().default(true),
   notifyOnExceed: z.boolean().default(true),
-  categoryId: z.number().optional().nullable(),
+  categoryId: z.coerce.number().optional().nullable(),
 });
 
 export type AccountInput = z.infer<typeof accountSchema>;

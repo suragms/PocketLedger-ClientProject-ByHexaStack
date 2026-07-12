@@ -5,15 +5,18 @@ import { cn } from '../../lib/utils';
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  hint?: string;
   icon?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, icon, id, ...props }, ref) => {
+  ({ className, label, error, hint, icon, id, ...props }, ref) => {
+    const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={id} className="block text-sm font-medium text-foreground mb-1">
+          <label htmlFor={inputId} className="block text-sm font-medium text-foreground mb-1.5">
             {label}
           </label>
         )}
@@ -25,12 +28,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
-            id={id}
+            id={inputId}
             className={cn(
-              'flex h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm',
+              'flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-2.5 text-sm',
               'placeholder:text-muted-foreground',
               'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
               'disabled:cursor-not-allowed disabled:opacity-50',
+              'transition-colors',
               icon && 'pl-10',
               error && 'border-destructive focus:ring-destructive',
               className
@@ -38,7 +42,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
-        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
+        {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
+        {!error && hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
       </div>
     );
   }

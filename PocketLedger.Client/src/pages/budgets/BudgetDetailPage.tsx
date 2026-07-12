@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
+import EmptyState from '../../components/shared/EmptyState';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import { formatCurrency, formatPercent } from '../../lib/utils';
 import { BUDGET_PERIODS } from '../../lib/constants';
@@ -59,7 +60,15 @@ export default function BudgetDetailPage() {
     );
   }
 
-  if (!budget) return <p className="text-muted-foreground">Budget not found</p>;
+  if (!budget) return (
+    <EmptyState
+      icon={<CurrencyDollarIcon className="h-12 w-12" />}
+      title="Budget not found"
+      description="This budget may have been deleted or doesn't exist."
+      actionLabel="Back to Budgets"
+      onAction={() => navigate('/budgets')}
+    />
+  );
 
   const progress = Math.min(budget.percentUsed, 100);
   const dailyBudget = budget.period === 0 ? budget.amount / 7 : budget.period === 1 ? budget.amount / 30 : budget.period === 2 ? budget.amount / 90 : budget.amount / 365;

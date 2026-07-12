@@ -25,7 +25,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />
-          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                top: 'calc(env(safe-area-inset-top, 0px) + 1rem)',
+                right: '1rem',
+              },
+            }}
+          />
         </BrowserRouter>
       </QueryClientProvider>
     </Provider>

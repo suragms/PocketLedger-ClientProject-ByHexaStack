@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Skeleton from '../../components/ui/Skeleton';
+import EmptyState from '../../components/shared/EmptyState';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import { formatCurrency, formatDateTime } from '../../lib/utils';
 import { ACCOUNT_TYPES } from '../../lib/constants';
@@ -19,6 +20,7 @@ import {
   ChartBarIcon,
   CalendarDaysIcon,
   ClipboardDocumentListIcon,
+  WalletIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
@@ -66,7 +68,15 @@ export default function WalletDetailPage() {
   }
 
   if (!account) {
-    return <p className="text-muted-foreground">Wallet not found</p>;
+    return (
+      <EmptyState
+        icon={<WalletIcon className="h-12 w-12" />}
+        title="Wallet not found"
+        description="This wallet may have been deleted or doesn't exist."
+        actionLabel="Back to Accounts"
+        onAction={() => navigate('/accounts')}
+      />
+    );
   }
 
   const typeInfo = ACCOUNT_TYPES.find((t) => t.value === account.type);
