@@ -8,6 +8,7 @@ import {
   LockClosedIcon,
   ShieldCheckIcon,
   ArrowRightOnRectangleIcon,
+  ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   SunIcon,
   MoonIcon,
@@ -19,12 +20,15 @@ import {
   WalletIcon,
   BanknotesIcon,
   FolderIcon,
+  ArrowUturnLeftIcon,
 } from '@heroicons/react/24/outline';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import PinInput from '../../components/auth/PinInput';
 import { SettingsRow, SettingsSection } from '../../components/settings/SettingsRow';
+import InstallAppPrompt from '../../components/pwa/InstallAppPrompt';
+import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { logout, setUser } from '../../features/auth/authSlice';
 import { setThemeMode } from '../../app/uiSlice';
@@ -221,6 +225,10 @@ const SettingsPage = () => {
       setDisable2FAError(err.message || 'Invalid password');
     },
   });
+
+  // ─── Install App ───
+  const { canInstall, install } = useInstallPrompt();
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   // ─── Data Export ───
   const [showExportModal, setShowExportModal] = useState(false);
@@ -435,6 +443,12 @@ const SettingsPage = () => {
             label="Budgets"
             onClick={() => navigate('/budgets')}
           />
+          <SettingsRow
+            icon={<ArrowUturnLeftIcon className="h-5 w-5 text-orange-600 dark:text-orange-400" />}
+            iconBg="bg-orange-100 dark:bg-orange-900/30"
+            label="Recurring Transactions"
+            onClick={() => navigate('/recurring-transactions')}
+          />
         </SettingsSection>
 
         {/* Notifications */}
@@ -445,6 +459,22 @@ const SettingsPage = () => {
             label="Notification Preferences"
             onClick={() => navigate('/notifications')}
           />
+        </SettingsSection>
+
+        {/* App */}
+        <SettingsSection title="App">
+          {canInstall && (
+            <SettingsRow
+              icon={<ArrowDownTrayIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />}
+              iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+              label="Install App"
+              subtitle="Add to home screen"
+              onClick={() => {
+                install();
+                setShowInstallPrompt(true);
+              }}
+            />
+          )}
         </SettingsSection>
 
         {/* Data & Privacy */}
@@ -915,6 +945,15 @@ const SettingsPage = () => {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* ─── Install App Modal ─── */}
+      <Modal
+        isOpen={showInstallPrompt}
+        onClose={() => setShowInstallPrompt(false)}
+        title="Install PocketLedger"
+      >
+        <InstallAppPrompt variant="inline" onDismiss={() => setShowInstallPrompt(false)} />
       </Modal>
     </div>
   );

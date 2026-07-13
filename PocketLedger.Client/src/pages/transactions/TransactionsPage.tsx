@@ -12,6 +12,7 @@ import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import TransactionFilterPanel from '../../components/transactions/TransactionFilterPanel';
 import TransactionDayGroup from '../../components/transactions/TransactionDayGroup';
 import ScrollToTopButton from '../../components/transactions/ScrollToTopButton';
+import ImportTransactionsModal from '../../components/transactions/ImportTransactionsModal';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
@@ -39,6 +40,7 @@ export default function TransactionsPage() {
   const [viewMode, setViewMode] = useState<'table' | 'card'>(isMobile ? 'card' : 'table');
   const [showDeleted, setShowDeleted] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Transaction | null>(null);
+  const [showImport, setShowImport] = useState(false);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const debouncedSearch = useDebounce(search, 300);
 
@@ -179,6 +181,9 @@ export default function TransactionsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <ArrowPathIcon className="h-4 w-4 mr-1.5" />Import
+          </Button>
           <Button variant="outline" size="sm" onClick={() => exportMutation.mutate()} loading={exportMutation.isPending}>
             <ArrowDownTrayIcon className="h-4 w-4 mr-1.5" />Export
           </Button>
@@ -402,6 +407,8 @@ export default function TransactionsPage() {
         variant="danger"
         loading={deleteMutation.isPending}
       />
+
+      {showImport && <ImportTransactionsModal onClose={() => setShowImport(false)} />}
     </motion.div>
   );
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { dashboardApi } from '../../api/dashboard.api';
+import { goalsApi } from '../../api/goals.api';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Skeleton from '../../components/ui/Skeleton';
@@ -22,6 +23,7 @@ import {
   ReceiptPercentIcon,
   CurrencyDollarIcon,
   ClipboardDocumentListIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import {
   Tooltip,
@@ -50,6 +52,13 @@ const item = {
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState('monthly');
+
+  const { data: goalsData } = useQuery({
+    queryKey: ['goals'],
+    queryFn: () => goalsApi.getAll(),
+  });
+
+  const goals = goalsData?.data || [];
 
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', period],
@@ -327,6 +336,69 @@ export default function DashboardPage() {
                   <Bar dataKey="expense" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Savings Goals */}
+      <motion.div variants={item}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Savings Goals</CardTitle>
+            <Link to="/goals" className="text-sm text-primary hover:underline">
+              View all
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {!goals.length ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <CheckCircleIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium mb-1">No savings goals set</p>
+                <p className="text-xs text-muted-foreground mb-3">Set a savings goal to track your progress</p>
+                <Link to="/goals/new">
+                  <Button size="sm"><PlusIcon className="h-4 w-4 mr-1" />New Goal</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {goals.filter((g) => !g.isArchived).slice(0, 3).map((goal) => {
+                  const progress = Math.min(goal.percentComplete, 100);
+                  return (
+                    <Link
+                      key={goal.id}
+                      to={goal.isCompleted ? '/goals' : `/goals/${goal.id}/edit`}
+                      className="block p-3 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="flex justify-between text-sm mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{goal.name}</span>
+                          {goal.isCompleted && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600 font-medium">Done</span>
+                          )}
+                        </div>
+                        <span className={goal.isCompleted ? 'text-green-600 font-medium' : ''}>
+                          {formatPercent(goal.percentComplete)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-2 rounded-full transition-all ${goal.isCompleted ? 'bg-green-500' : 'bg-primary'}`}
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>
+                          {formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}
+                        </span>
+                        <span>{formatCurrency(goal.remainingAmount)} to go</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             )}
           </CardContent>
         </Card>

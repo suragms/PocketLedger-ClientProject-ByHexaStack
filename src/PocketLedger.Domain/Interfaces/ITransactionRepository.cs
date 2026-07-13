@@ -13,7 +13,7 @@ public interface ITransactionRepository : IRepository<Transaction>
     Task<IReadOnlyList<Transaction>> GetTransactionsWithDetailsAsync(
         string userId,
         DateTime? startDate, DateTime? endDate,
-        TransactionType? type, int? accountId, int? categoryId,
+        TransactionType? type, int? accountId, int? categoryId, int? tagId,
         decimal? minAmount, decimal? maxAmount,
         string? search, string? payee,
         string? sortBy, string? sortOrder,
@@ -22,7 +22,7 @@ public interface ITransactionRepository : IRepository<Transaction>
     Task<int> GetFilteredCountAsync(
         string userId,
         DateTime? startDate, DateTime? endDate,
-        TransactionType? type, int? accountId, int? categoryId,
+        TransactionType? type, int? accountId, int? categoryId, int? tagId,
         decimal? minAmount, decimal? maxAmount,
         string? search, string? payee,
         CancellationToken cancellationToken = default);

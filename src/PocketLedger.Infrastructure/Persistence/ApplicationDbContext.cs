@@ -16,6 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, string, Identi
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Budget> Budgets => Set<Budget>();
+    public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();
     public DbSet<RecurringTransaction> RecurringTransactions => Set<RecurringTransaction>();
@@ -29,6 +30,7 @@ public class ApplicationDbContext : IdentityDbContext<User, Role, string, Identi
     IAccountRepository IUnitOfWork.Accounts => new AccountRepository(this);
     ICategoryRepository IUnitOfWork.Categories => new CategoryRepository(this);
     IBudgetRepository IUnitOfWork.Budgets => new BudgetRepository(this);
+    IGoalRepository IUnitOfWork.Goals => new GoalRepository(this);
     INotificationRepository IUnitOfWork.Notifications => new NotificationRepository(this);
     IUserSettingsRepository IUnitOfWork.UserSettings => new UserSettingsRepository(this);
     IAuditLogRepository IUnitOfWork.AuditLogs => new AuditLogRepository(this);

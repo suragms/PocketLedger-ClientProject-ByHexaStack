@@ -6,11 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi } from '../../api/transactions.api';
 import { accountsApi } from '../../api/accounts.api';
 import { categoriesApi } from '../../api/categories.api';
-import { transactionSchema } from '../../lib/validators';
+import { transactionSchema, transferSchema, type TransferInput } from '../../lib/validators';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import ReceiptUpload from '../../components/transactions/ReceiptUpload';
+import TagInput from '../../components/transactions/TagInput';
 import { useNavigationGuard } from '../../hooks/useNavigationGuard';
 import { TRANSACTION_TYPES, PAYMENT_METHODS } from '../../lib/constants';
 import toast from 'react-hot-toast';
@@ -85,7 +86,7 @@ export default function TransactionFormPage() {
     }
   });
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors, dirtyFields } } = useForm({
+  const { register, handleSubmit, reset, watch, setValue, getValues, formState: { errors, dirtyFields } } = useForm({
     resolver: zodResolver(transactionSchema),
     defaultValues: { currency: 'USD', type: initialType, paymentMethod: 0, date: new Date().toISOString().split('T')[0], amount: 0 },
     mode: 'onBlur',
@@ -106,6 +107,7 @@ export default function TransactionFormPage() {
         date: t.date.split('T')[0], note: t.note || undefined, payee: t.payee || undefined,
         reference: t.reference || undefined, paymentMethod: t.paymentMethod,
         accountId: t.accountId, categoryId: t.categoryId ?? undefined,
+        tagIds: t.tagIds || [],
       });
     }
   }, [existing, reset]);
@@ -139,6 +141,15 @@ export default function TransactionFormPage() {
     },
   });
 
+  const transferMutation = useMutation({
+    mutationFn: (data: TransferInput) => transactionsApi.transferFunds(data),
+    onSuccess: () => {
+      invalidateAll();
+      toast.success('Transfer completed');
+      navigate('/transactions');
+    },
+  });
+
   const createAnotherMutation = useMutation({
     mutationFn: (data: any) => transactionsApi.create(data),
     onSuccess: () => {
@@ -157,10 +168,35 @@ export default function TransactionFormPage() {
     return true;
   });
 
-  const onSubmit = (data: any) => mutation.mutate(data);
+  const onSubmit = (data: any) => {
+    if (selectedType === 2) {
+      const vals = getValues();
+      transferMutation.mutate({
+        amount: vals.amount,
+        currency: vals.currency,
+        fromAccountId: vals.accountId,
+        toAccountId: vals.targetAccountId,
+        date: vals.date,
+        note: vals.note,
+      });
+    } else {
+      mutation.mutate(data);
+    }
+  };
+
   const onSubmitAddAnother = (data: any) => {
     if (isEdit) {
       mutation.mutate(data);
+    } else if (selectedType === 2) {
+      const vals = getValues();
+      transferMutation.mutate({
+        amount: vals.amount,
+        currency: vals.currency,
+        fromAccountId: vals.accountId,
+        toAccountId: vals.targetAccountId,
+        date: vals.date,
+        note: vals.note,
+      });
     } else {
       createAnotherMutation.mutate(data);
     }
@@ -240,35 +276,55 @@ export default function TransactionFormPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Account & Category">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label="Account"
-              placeholder="Select account"
-              autoComplete="off"
-              options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
-              error={errors.accountId?.message}
-              {...register('accountId', { valueAsNumber: true })}
-            />
-            <div>
-              <div className="flex justify-between items-baseline mb-1">
-                <label className="block text-sm font-medium">Category</label>
-                <button
-                  type="button"
-                  onClick={() => setShowCategoryModal(true)}
-                  className="text-xs text-primary hover:underline font-semibold"
-                >
-                  + Add Category
-                </button>
-              </div>
+        <SectionCard title={selectedType === 2 ? 'Transfer Accounts' : 'Account & Category'}>
+          {selectedType === 2 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
-                placeholder="Select category"
+                label="From Account"
+                placeholder="Select source"
                 autoComplete="off"
-                options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-                {...register('categoryId', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+                options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
+                error={errors.accountId?.message}
+                {...register('accountId', { valueAsNumber: true })}
+              />
+              <Select
+                label="To Account"
+                placeholder="Select destination"
+                autoComplete="off"
+                options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
+                {...register('targetAccountId', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
               />
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Select
+                label="Account"
+                placeholder="Select account"
+                autoComplete="off"
+                options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
+                error={errors.accountId?.message}
+                {...register('accountId', { valueAsNumber: true })}
+              />
+              <div>
+                <div className="flex justify-between items-baseline mb-1">
+                  <label className="block text-sm font-medium">Category</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryModal(true)}
+                    className="text-xs text-primary hover:underline font-semibold"
+                  >
+                    + Add Category
+                  </button>
+                </div>
+                <Select
+                  placeholder="Select category"
+                  autoComplete="off"
+                  options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
+                  {...register('categoryId', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+                />
+              </div>
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Additional Info">
@@ -292,6 +348,11 @@ export default function TransactionFormPage() {
             autoComplete="off"
             {...register('note')}
           />
+          <TagInput
+            label="Tags"
+            value={watch('tagIds') || []}
+            onChange={(ids) => setValue('tagIds', ids, { shouldDirty: true })}
+          />
         </SectionCard>
 
         {isEdit && transaction && (
@@ -307,21 +368,22 @@ export default function TransactionFormPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
               type="submit"
-              loading={mutation.isPending}
+              loading={selectedType === 2 ? transferMutation.isPending : mutation.isPending}
               className="w-full sm:flex-1 min-h-[48px]"
               onClick={handleSubmit(onSubmit)}
             >
-              {isEdit ? 'Update' : 'Create'} Transaction
+              {selectedType === 2 ? 'Transfer' : isEdit ? 'Update' : 'Create'} {selectedType === 2 ? 'Funds' : 'Transaction'}
             </Button>
             {!isEdit && (
               <Button
                 type="button"
                 variant="secondary"
-                loading={createAnotherMutation.isPending}
+                loading={selectedType === 2 ? false : createAnotherMutation.isPending}
                 onClick={handleSubmit(onSubmitAddAnother)}
                 className="w-full sm:flex-1 min-h-[48px]"
+                disabled={selectedType === 2}
               >
-                Save & Add Another
+                {selectedType === 2 ? 'Transfer' : 'Save & Add Another'}
               </Button>
             )}
             <Button

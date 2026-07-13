@@ -6,6 +6,7 @@ public interface IUnitOfWork : IDisposable
     IAccountRepository Accounts { get; }
     ICategoryRepository Categories { get; }
     IBudgetRepository Budgets { get; }
+    IGoalRepository Goals { get; }
     INotificationRepository Notifications { get; }
     IUserSettingsRepository UserSettings { get; }
     IAuditLogRepository AuditLogs { get; }

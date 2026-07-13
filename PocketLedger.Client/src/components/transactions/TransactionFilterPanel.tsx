@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FunnelIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { categoriesApi } from '../../api/categories.api';
 import { accountsApi } from '../../api/accounts.api';
+import { tagsApi } from '../../api/tags.api';
 import Select from '../ui/Select';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -33,8 +34,14 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
     queryFn: () => categoriesApi.getAll(),
   });
 
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => tagsApi.getAll(),
+  });
+
   const accounts = accountsData?.data?.items || [];
   const categories = categoriesData?.data || [];
+  const tags = tagsData?.data || [];
 
   const activeFilterCount = [
     filters.startDate,
@@ -42,6 +49,7 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
     filters.type !== undefined,
     filters.accountId,
     filters.categoryId,
+    filters.tagId,
     filters.minAmount,
     filters.maxAmount,
     filters.search,
@@ -91,6 +99,13 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
         options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
         value={filters.categoryId || ''}
         onChange={(e) => updateFilter('categoryId', e.target.value ? Number(e.target.value) : undefined)}
+      />
+      <Select
+        label="Tag"
+        placeholder="All tags"
+        options={tags.map((t: any) => ({ value: t.id, label: t.name }))}
+        value={filters.tagId || ''}
+        onChange={(e) => updateFilter('tagId', e.target.value ? Number(e.target.value) : undefined)}
       />
       <Input
         label="Min Amount"
@@ -229,6 +244,12 @@ export default function TransactionFilterPanel({ filters, onFiltersChange, onCle
             <Badge variant="outline" className="text-[10px]">
               {categories.find((c: any) => c.id === filters.categoryId)?.name || 'Category'}
               <button onClick={() => updateFilter('categoryId', undefined)} className="ml-1 hover:text-destructive">×</button>
+            </Badge>
+          )}
+          {filters.tagId && (
+            <Badge variant="outline" className="text-[10px]">
+              {tags.find((t: any) => t.id === filters.tagId)?.name || 'Tag'}
+              <button onClick={() => updateFilter('tagId', undefined)} className="ml-1 hover:text-destructive">×</button>
             </Badge>
           )}
           {(filters.minAmount || filters.maxAmount) && (

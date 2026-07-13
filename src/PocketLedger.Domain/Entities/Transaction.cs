@@ -18,10 +18,13 @@ public class Transaction : BaseAuditableEntity
     public bool IsRecurring { get; set; }
     public int? RecurringTransactionId { get; set; }
     public int AccountId { get; set; }
+    public int? TargetAccountId { get; set; }
+    public Guid? TransferGroupId { get; set; }
     public int? CategoryId { get; set; }
     public string UserId { get; set; } = string.Empty;
 
     public Account Account { get; set; } = null!;
+    public Account? TargetAccount { get; set; }
     public Category? Category { get; set; }
     public User User { get; set; } = null!;
     public ICollection<TransactionTag> TransactionTags { get; set; } = new List<TransactionTag>();

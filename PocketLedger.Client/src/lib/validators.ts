@@ -157,8 +157,29 @@ export const budgetSchema = z.object({
 
 export type AccountInput = z.infer<typeof accountSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
+
+export const transferSchema = z.object({
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  currency: z.string().length(3).default('USD'),
+  fromAccountId: z.coerce.number().positive('Source account is required'),
+  toAccountId: z.coerce.number().positive('Destination account is required'),
+  date: z.string().min(1, 'Date is required'),
+  note: z.string().max(500).optional(),
+});
+
+export type TransferInput = z.infer<typeof transferSchema>;
 export type CategoryInput = z.infer<typeof categorySchema>;
 export type BudgetInput = z.infer<typeof budgetSchema>;
+
+export const goalSchema = z.object({
+  name: z.string().min(1, 'Goal name is required').max(100),
+  targetAmount: z.coerce.number().positive('Target amount must be greater than 0'),
+  currentAmount: z.coerce.number().min(0).default(0),
+  targetDate: z.string().min(1, 'Target date is required'),
+  linkedAccountId: z.coerce.number().optional().nullable(),
+});
+
+export type GoalInput = z.infer<typeof goalSchema>;
 
 export const updateAppearanceSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']),
@@ -193,6 +214,21 @@ export const enable2FASchema = z.object({
 export const disable2FASchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
+
+export const recurringTransactionSchema = z.object({
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  currency: z.string().length(3).default('USD'),
+  type: z.coerce.number().min(0).max(2),
+  note: z.string().max(500).optional(),
+  payee: z.string().max(200).optional(),
+  frequencyDays: z.coerce.number().positive('Frequency must be at least 1 day'),
+  nextDueDate: z.string().min(1, 'Next due date is required'),
+  endDate: z.string().optional().nullable(),
+  accountId: z.coerce.number().positive('Account is required'),
+  categoryId: z.coerce.number().positive().optional().nullable(),
+});
+
+export type RecurringTransactionInput = z.infer<typeof recurringTransactionSchema>;
 
 export type UpdateAppearanceInput = z.infer<typeof updateAppearanceSchema>;
 export type UpdateNotificationsSettingsInput = z.infer<typeof updateNotificationsSettingsSchema>;

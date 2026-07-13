@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using PocketLedger.Application.Common;
 using PocketLedger.Application.Features.Transactions.Commands.CreateTransaction;
 using PocketLedger.Application.Features.Transactions.Commands.DeleteTransaction;
+using PocketLedger.Application.Features.Transactions.Commands.ImportTransactions;
 using PocketLedger.Application.Features.Transactions.Commands.RemoveReceipt;
+using PocketLedger.Application.Features.Transactions.Commands.TransferFunds;
 using PocketLedger.Application.Features.Transactions.Commands.UndoDeleteTransaction;
 using PocketLedger.Application.Features.Transactions.Commands.UpdateTransaction;
 using PocketLedger.Application.Features.Transactions.Commands.UploadReceipt;
@@ -110,6 +112,57 @@ public class TransactionsController : ControllerBase
     }
 
     /// <summary>
+    /// Transfer funds between accounts atomically
+    /// </summary>
+    [HttpPost("transfer")]
+    [ProducesResponseType(typeof(ApiResponse<TransferResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> TransferFunds([FromBody] TransferFundsCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<TransferResult>.SuccessResponse(result, "Transfer completed successfully."));
+    }
+
+    /// <summary>
+    /// Import transactions from a CSV file
+    /// </summary>
+    [HttpPost("import")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<ImportResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ImportTransactions(
+        IFormFile file,
+        [FromForm] int accountId,
+        [FromForm] int dateColumn = 0,
+        [FromForm] int descriptionColumn = 1,
+        [FromForm] int amountColumn = 2,
+        [FromForm] int typeColumn = 3,
+        [FromForm] int? categoryColumn = null,
+        [FromForm] bool hasHeaderRow = true)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded." });
+
+        using var stream = file.OpenReadStream();
+        var command = new ImportTransactionsCommand
+        {
+            FileStream = stream,
+            FileName = file.FileName,
+            AccountId = accountId,
+            DateColumn = dateColumn,
+            DescriptionColumn = descriptionColumn,
+            AmountColumn = amountColumn,
+            TypeColumn = typeColumn,
+            CategoryColumn = categoryColumn,
+            HasHeaderRow = hasHeaderRow
+        };
+
+        var result = await _mediator.Send(command);
+        return Ok(ApiResponse<ImportResult>.SuccessResponse(result,
+            $"Imported {result.ImportedCount} transactions. {result.SkippedCount} skipped. {result.Errors.Count} errors."));
+    }
+
+    /// <summary>
     /// Upload receipt image for a transaction
     /// </summary>
     [HttpPost("{id}/receipt")]
@@ -180,7 +233,7 @@ public class TransactionsController : ControllerBase
     {
         var userId = _currentUserService.UserId!;
         var transactions = await _unitOfWork.Transactions.GetTransactionsWithDetailsAsync(
-            userId, startDate, endDate, type, accountId, categoryId,
+            userId, startDate, endDate, type, accountId, categoryId, null,
             minAmount, maxAmount, search, payee,
             "date", "desc", 0, 10000, CancellationToken.None);
 

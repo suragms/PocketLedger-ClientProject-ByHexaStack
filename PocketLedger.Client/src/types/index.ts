@@ -129,6 +129,10 @@ export interface Transaction {
   accountId: number;
   accountName: string;
   accountColor?: string;
+  targetAccountId?: number;
+  targetAccountName?: string;
+  targetAccountColor?: string;
+  transferGroupId?: string;
   categoryId?: number;
   categoryName?: string;
   categoryColor?: string;
@@ -138,6 +142,25 @@ export interface Transaction {
   isDeleted: boolean;
   deletedAt?: string;
   tags: string[];
+  tagIds: number[];
+}
+
+export interface ImportResult {
+  importedCount: number;
+  skippedCount: number;
+  currency: string;
+  errors: ImportError[];
+}
+
+export interface ImportError {
+  rowNumber: number;
+  message: string;
+}
+
+export interface TransferResult {
+  sourceTransaction: Transaction;
+  destinationTransaction: Transaction;
+  transferGroupId: string;
 }
 
 export interface TransactionFilters {
@@ -146,6 +169,7 @@ export interface TransactionFilters {
   type?: number;
   accountId?: number;
   categoryId?: number;
+  tagId?: number;
   paymentMethod?: number;
   minAmount?: number;
   maxAmount?: number;
@@ -153,6 +177,13 @@ export interface TransactionFilters {
   payee?: string;
   sortBy?: string;
   sortOrder?: string;
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
 }
 
 export interface Category {
@@ -577,4 +608,42 @@ export interface ImportResult {
   categoriesImported: number;
   budgetsImported: number;
   importedAt: string;
+}
+
+export interface Goal {
+  id: number;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: string;
+  linkedAccountId?: number;
+  linkedAccountName?: string;
+  isArchived: boolean;
+  percentComplete: number;
+  remainingAmount: number;
+  isCompleted: boolean;
+  createdAt: string;
+}
+
+export interface RecurringTransaction {
+  id: number;
+  amount: number;
+  currency: string;
+  type: number;
+  typeName: string;
+  note?: string;
+  payee?: string;
+  frequencyDays: number;
+  nextDueDate: string;
+  endDate?: string;
+  isActive: boolean;
+  accountId: number;
+  accountName: string;
+  accountColor?: string;
+  categoryId?: number;
+  categoryName?: string;
+  categoryColor?: string;
+  categoryIcon?: string;
+  createdAt: string;
+  updatedAt?: string;
 }

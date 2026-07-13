@@ -1,3 +1,4 @@
+using AutoMapper;
 using PocketLedger.Domain.Enums;
 using PocketLedger.Domain.Entities;
 using PocketLedger.Application.Common.Mappings;
@@ -6,6 +7,15 @@ namespace PocketLedger.Application.Features.Transactions.DTOs;
 
 public class TransactionDto : IMapFrom<Transaction>
 {
+    void IMapFrom<Transaction>.Mapping(Profile profile)
+    {
+        profile.CreateMap<Transaction, TransactionDto>()
+            .ForMember(d => d.Tags, opt => opt.MapFrom(s => s.TransactionTags.Select(tt => tt.Tag.Name).ToList()))
+            .ForMember(d => d.TagIds, opt => opt.MapFrom(s => s.TransactionTags.Select(tt => tt.TagId).ToList()))
+            .ForMember(d => d.TargetAccountName, opt => opt.MapFrom(s => s.TargetAccount != null ? s.TargetAccount.Name : null))
+            .ForMember(d => d.TargetAccountColor, opt => opt.MapFrom(s => s.TargetAccount != null ? s.TargetAccount.Color : null));
+    }
+
     public int Id { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "USD";
@@ -37,6 +47,10 @@ public class TransactionDto : IMapFrom<Transaction>
     public int AccountId { get; set; }
     public string AccountName { get; set; } = string.Empty;
     public string? AccountColor { get; set; }
+    public int? TargetAccountId { get; set; }
+    public string? TargetAccountName { get; set; }
+    public string? TargetAccountColor { get; set; }
+    public Guid? TransferGroupId { get; set; }
     public int? CategoryId { get; set; }
     public string? CategoryName { get; set; }
     public string? CategoryColor { get; set; }
@@ -46,4 +60,5 @@ public class TransactionDto : IMapFrom<Transaction>
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     public List<string> Tags { get; set; } = new();
+    public List<int> TagIds { get; set; } = new();
 }

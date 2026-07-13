@@ -4,12 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { categoriesApi } from '../../api/categories.api';
 import { accountsApi } from '../../api/accounts.api';
+import { tagsApi } from '../../api/tags.api';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
 import { TRANSACTION_TYPES, SORT_OPTIONS } from '../../lib/constants';
 import type { TransactionFilters } from '../../types';
-import type { Category, Account } from '../../types';
+import type { Category, Account, Tag } from '../../types';
 
 interface MobileFilterSheetProps {
   isOpen: boolean;
@@ -46,8 +47,15 @@ export default function MobileFilterSheet({
     enabled: isOpen,
   });
 
+  const { data: tagsData } = useQuery({
+    queryKey: ['tags'],
+    queryFn: () => tagsApi.getAll(),
+    enabled: isOpen,
+  });
+
   const accounts = accountsData?.data?.items ?? [];
   const categories = categoriesData?.data ?? [];
+  const tags = tagsData?.data ?? [];
 
   const updateFilter = useCallback(
     (key: keyof TransactionFilters, value: string | number | undefined) => {
@@ -183,6 +191,16 @@ export default function MobileFilterSheet({
                 value={localFilters.categoryId || ''}
                 onChange={(e) =>
                   updateFilter('categoryId', e.target.value ? Number(e.target.value) : undefined)
+                }
+              />
+
+              <Select
+                label="Tag"
+                placeholder="All tags"
+                options={tags.map((t: Tag) => ({ value: t.id, label: t.name }))}
+                value={localFilters.tagId || ''}
+                onChange={(e) =>
+                  updateFilter('tagId', e.target.value ? Number(e.target.value) : undefined)
                 }
               />
 

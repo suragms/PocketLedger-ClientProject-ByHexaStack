@@ -26,13 +26,13 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
 
         var transactions = await _unitOfWork.Transactions.GetTransactionsWithDetailsAsync(
             userId, request.StartDate, request.EndDate, request.Type,
-            request.AccountId, request.CategoryId, request.MinAmount, request.MaxAmount,
+            request.AccountId, request.CategoryId, request.TagId, request.MinAmount, request.MaxAmount,
             request.Search, request.Payee, request.SortBy, request.SortOrder,
             skip, request.PageSize, cancellationToken);
 
         var totalCount = await _unitOfWork.Transactions.GetFilteredCountAsync(
             userId, request.StartDate, request.EndDate, request.Type,
-            request.AccountId, request.CategoryId, request.MinAmount, request.MaxAmount,
+            request.AccountId, request.CategoryId, request.TagId, request.MinAmount, request.MaxAmount,
             request.Search, request.Payee, cancellationToken);
 
         return new PagedResult<TransactionDto>

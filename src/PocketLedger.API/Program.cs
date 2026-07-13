@@ -217,6 +217,12 @@ app.MapHangfireDashboard("/hangfire", new DashboardOptions
 app.MapControllers();
 app.MapHealthChecks("/health");
 
+RecurringJob.AddOrUpdate<RecurringTransactionJobs>(
+    "materialize-recurring-transactions",
+    job => job.MaterializeDueTransactions(CancellationToken.None),
+    Cron.Daily,
+    new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+
 RecurringJob.AddOrUpdate<NotificationJobs>(
     "daily-reminders",
     job => job.SendDailyReminders(CancellationToken.None),

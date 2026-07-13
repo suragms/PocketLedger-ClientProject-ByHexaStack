@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PencilIcon, TrashIcon, ReceiptPercentIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, ReceiptPercentIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import { formatCurrency } from '../../lib/utils';
 import type { Transaction } from '../../types';
 
@@ -13,6 +13,7 @@ interface TransactionItemProps {
 export default function TransactionItem({ transaction, onDelete, viewMode = 'table' }: TransactionItemProps) {
   const isIncome = transaction.type === 0;
   const isExpense = transaction.type === 1;
+  const isTransfer = transaction.type === 2;
 
   if (viewMode === 'card') {
     return (
@@ -23,12 +24,16 @@ export default function TransactionItem({ transaction, onDelete, viewMode = 'tab
       >
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: transaction.categoryColor || (isIncome ? '#22c55e' : isExpense ? '#ef4444' : '#3b82f6') + '20' }}
+          style={{ backgroundColor: isTransfer ? '#3b82f620' : (transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444')) + '20' }}
         >
-          <div
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: transaction.categoryColor || (isIncome ? '#22c55e' : isExpense ? '#ef4444' : '#3b82f6') }}
-          />
+          {isTransfer ? (
+            <ArrowUturnLeftIcon className="h-5 w-5 text-blue-500" />
+          ) : (
+            <div
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444') }}
+            />
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -41,14 +46,34 @@ export default function TransactionItem({ transaction, onDelete, viewMode = 'tab
             )}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-xs text-muted-foreground truncate">{transaction.accountName}</span>
-            {transaction.categoryName && (
+            {isTransfer ? (
+              <span className="text-xs text-muted-foreground truncate">
+                {transaction.accountName} → {transaction.targetAccountName || '?'}
+              </span>
+            ) : (
               <>
-                <span className="text-xs text-muted-foreground">·</span>
-                <span className="text-xs text-muted-foreground truncate">{transaction.categoryName}</span>
+                <span className="text-xs text-muted-foreground truncate">{transaction.accountName}</span>
+                {transaction.categoryName && (
+                  <>
+                    <span className="text-xs text-muted-foreground">·</span>
+                    <span className="text-xs text-muted-foreground truncate">{transaction.categoryName}</span>
+                  </>
+                )}
               </>
             )}
           </div>
+          {transaction.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {transaction.tags.map((tag, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="text-right shrink-0">
@@ -87,12 +112,16 @@ export default function TransactionItem({ transaction, onDelete, viewMode = 'tab
         <div className="flex items-center gap-3">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: (transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444')) + '20' }}
+            style={{ backgroundColor: isTransfer ? '#3b82f620' : (transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444')) + '20' }}
           >
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444') }}
-            />
+            {isTransfer ? (
+              <ArrowUturnLeftIcon className="h-4 w-4 text-blue-500" />
+            ) : (
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: transaction.categoryColor || (isIncome ? '#22c55e' : '#ef4444') }}
+              />
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium truncate max-w-[200px]">
@@ -101,14 +130,34 @@ export default function TransactionItem({ transaction, onDelete, viewMode = 'tab
             <p className="text-xs text-muted-foreground truncate max-w-[200px]">
               {transaction.note || transaction.payee || '—'}
             </p>
+            {transaction.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {transaction.tags.map((tag, i) => (
+                  <span key={i} className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-muted text-muted-foreground">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </td>
       <td className="py-3 px-3">
-        <span className="text-sm text-muted-foreground">{transaction.accountName}</span>
+        {isTransfer ? (
+          <span className="text-sm text-blue-600 font-medium">
+            {transaction.accountName} → {transaction.targetAccountName || '?'}
+          </span>
+        ) : (
+          <span className="text-sm text-muted-foreground">{transaction.accountName}</span>
+        )}
       </td>
       <td className="py-3 px-3">
-        {transaction.categoryName ? (
+        {isTransfer ? (
+          <span className="inline-flex items-center gap-1.5 text-sm text-blue-600">
+            <ArrowUturnLeftIcon className="h-4 w-4" />
+            Transfer
+          </span>
+        ) : transaction.categoryName ? (
           <span className="inline-flex items-center gap-1.5 text-sm">
             <span
               className="w-2 h-2 rounded-full shrink-0"

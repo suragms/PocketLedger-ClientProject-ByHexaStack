@@ -16,9 +16,11 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.Property(t => t.Reference).HasMaxLength(100);
         builder.Property(t => t.ReceiptUrl).HasMaxLength(500);
         builder.Property(t => t.ReceiptThumbnailUrl).HasMaxLength(500);
-        builder.HasOne(t => t.Account).WithMany(a => a.Transactions).HasForeignKey(t => t.AccountId);
+        builder.HasOne(t => t.Account).WithMany(a => a.Transactions).HasForeignKey(t => t.AccountId).OnDelete(DeleteBehavior.NoAction);
+        builder.HasOne(t => t.TargetAccount).WithMany().HasForeignKey(t => t.TargetAccountId).IsRequired(false).OnDelete(DeleteBehavior.NoAction);
         builder.HasOne(t => t.Category).WithMany(c => c.Transactions).HasForeignKey(t => t.CategoryId).IsRequired(false);
         builder.HasOne(t => t.User).WithMany(u => u.Transactions).HasForeignKey(t => t.UserId);
+        builder.HasIndex(t => t.TransferGroupId);
         builder.HasIndex(t => t.Date);
         builder.HasIndex(t => t.UserId);
         builder.HasIndex(t => new { t.UserId, t.IsDeleted });

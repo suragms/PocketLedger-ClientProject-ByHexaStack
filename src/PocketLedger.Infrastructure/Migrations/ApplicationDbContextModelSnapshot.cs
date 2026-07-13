@@ -428,6 +428,66 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("PocketLedger.Domain.Entities.Goal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CurrentAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("LinkedAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("TargetAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("TargetDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LinkedAccountId");
+
+                    b.HasIndex("UserId", "IsArchived");
+
+                    b.ToTable("Goals");
+                });
+
             modelBuilder.Entity("PocketLedger.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -787,6 +847,12 @@ namespace PocketLedger.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TargetAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("TransferGroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
@@ -807,6 +873,10 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Date");
+
+                    b.HasIndex("TargetAccountId");
+
+                    b.HasIndex("TransferGroupId");
 
                     b.HasIndex("UserId");
 
@@ -1180,6 +1250,23 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PocketLedger.Domain.Entities.Goal", b =>
+                {
+                    b.HasOne("PocketLedger.Domain.Entities.Account", "LinkedAccount")
+                        .WithMany()
+                        .HasForeignKey("LinkedAccountId");
+
+                    b.HasOne("PocketLedger.Domain.Entities.User", "User")
+                        .WithMany("Goals")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LinkedAccount");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PocketLedger.Domain.Entities.Notification", b =>
                 {
                     b.HasOne("PocketLedger.Domain.Entities.User", "User")
@@ -1243,12 +1330,17 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.HasOne("PocketLedger.Domain.Entities.Account", "Account")
                         .WithMany("Transactions")
                         .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("PocketLedger.Domain.Entities.Category", "Category")
                         .WithMany("Transactions")
                         .HasForeignKey("CategoryId");
+
+                    b.HasOne("PocketLedger.Domain.Entities.Account", "TargetAccount")
+                        .WithMany()
+                        .HasForeignKey("TargetAccountId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("PocketLedger.Domain.Entities.User", "User")
                         .WithMany("Transactions")
@@ -1259,6 +1351,8 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("Category");
+
+                    b.Navigation("TargetAccount");
 
                     b.Navigation("User");
                 });
@@ -1354,6 +1448,8 @@ namespace PocketLedger.Infrastructure.Migrations
                     b.Navigation("Budgets");
 
                     b.Navigation("Categories");
+
+                    b.Navigation("Goals");
 
                     b.Navigation("Passkeys");
 

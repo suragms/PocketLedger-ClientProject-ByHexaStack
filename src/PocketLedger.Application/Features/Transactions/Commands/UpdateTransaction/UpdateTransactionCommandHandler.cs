@@ -12,12 +12,14 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRepository<Tag> _tagRepo;
     private readonly IMapper _mapper;
 
-    public UpdateTransactionCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IMapper mapper)
+    public UpdateTransactionCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IRepository<Tag> tagRepo, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _tagRepo = tagRepo;
         _mapper = mapper;
     }
 
@@ -53,6 +55,18 @@ public class UpdateTransactionCommandHandler : IRequestHandler<UpdateTransaction
         transaction.CategoryId = request.CategoryId;
         transaction.UpdatedAt = DateTime.UtcNow;
         transaction.UpdatedBy = _currentUserService.UserId;
+
+        // Sync tags
+        transaction.TransactionTags.Clear();
+        if (request.TagIds?.Count > 0)
+        {
+            foreach (var tagId in request.TagIds)
+            {
+                var tag = await _tagRepo.GetByIdAsync(tagId, cancellationToken);
+                if (tag != null && tag.UserId == _currentUserService.UserId)
+                    transaction.TransactionTags.Add(new TransactionTag { TagId = tagId });
+            }
+        }
 
         // Apply new balance
         account.Balance = request.Type switch

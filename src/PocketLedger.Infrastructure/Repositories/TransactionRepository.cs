@@ -54,7 +54,7 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
 
     public async Task<IReadOnlyList<Transaction>> GetTransactionsWithDetailsAsync(
         string userId, DateTime? startDate, DateTime? endDate,
-        TransactionType? type, int? accountId, int? categoryId,
+        TransactionType? type, int? accountId, int? categoryId, int? tagId,
         decimal? minAmount, decimal? maxAmount, string? search, string? payee,
         string? sortBy, string? sortOrder, int skip, int take,
         CancellationToken cancellationToken = default)
@@ -62,6 +62,7 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
         IQueryable<Transaction> query = _dbSet
             .Include(t => t.Category)
             .Include(t => t.Account)
+            .Include(t => t.TransactionTags).ThenInclude(tt => tt.Tag)
             .Where(t => t.UserId == userId && !t.IsDeleted);
 
         if (startDate.HasValue) query = query.Where(t => t.Date >= startDate.Value);
@@ -69,6 +70,7 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
         if (type.HasValue) query = query.Where(t => t.Type == type.Value);
         if (accountId.HasValue) query = query.Where(t => t.AccountId == accountId.Value);
         if (categoryId.HasValue) query = query.Where(t => t.CategoryId == categoryId.Value);
+        if (tagId.HasValue) query = query.Where(t => t.TransactionTags.Any(tt => tt.TagId == tagId.Value));
         if (minAmount.HasValue) query = query.Where(t => t.Amount >= minAmount.Value);
         if (maxAmount.HasValue) query = query.Where(t => t.Amount <= maxAmount.Value);
         if (!string.IsNullOrWhiteSpace(search))
@@ -90,7 +92,7 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
 
     public async Task<int> GetFilteredCountAsync(
         string userId, DateTime? startDate, DateTime? endDate,
-        TransactionType? type, int? accountId, int? categoryId,
+        TransactionType? type, int? accountId, int? categoryId, int? tagId,
         decimal? minAmount, decimal? maxAmount, string? search, string? payee,
         CancellationToken cancellationToken = default)
     {
@@ -101,6 +103,7 @@ public class TransactionRepository : Repository<Transaction>, ITransactionReposi
         if (type.HasValue) query = query.Where(t => t.Type == type.Value);
         if (accountId.HasValue) query = query.Where(t => t.AccountId == accountId.Value);
         if (categoryId.HasValue) query = query.Where(t => t.CategoryId == categoryId.Value);
+        if (tagId.HasValue) query = query.Where(t => t.TransactionTags.Any(tt => tt.TagId == tagId.Value));
         if (minAmount.HasValue) query = query.Where(t => t.Amount >= minAmount.Value);
         if (maxAmount.HasValue) query = query.Where(t => t.Amount <= maxAmount.Value);
         if (!string.IsNullOrWhiteSpace(search))

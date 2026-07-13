@@ -5,6 +5,8 @@ import { SIDEBAR } from '../../lib/responsive';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import MobileNav from './MobileNav';
+import OfflineBanner from '../pwa/OfflineBanner';
+import InstallAppPrompt from '../pwa/InstallAppPrompt';
 
 export default function MainLayout() {
   const { sidebarOpen } = useAppSelector((state) => state.ui);
@@ -19,12 +21,14 @@ export default function MainLayout() {
         className="min-h-screen transition-all duration-300"
         style={{ marginLeft: `${sidebarWidth}px` }}
       >
+        <OfflineBanner />
         <Header />
         <main id="main-content" className="content-padding pb-20 md:pb-8" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
       {isMobile && <MobileNav />}
+      <InstallAppPrompt />
     </div>
   );
 }

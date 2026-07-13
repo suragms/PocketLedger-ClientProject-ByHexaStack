@@ -19,10 +19,13 @@ const WalletsPage = lazy(() => import('./pages/accounts/WalletsPage'));
 const WalletDetailPage = lazy(() => import('./pages/accounts/WalletDetailPage'));
 const TransactionsPage = lazy(() => import('./pages/transactions/TransactionsPage'));
 const TransactionFormPage = lazy(() => import('./pages/transactions/TransactionFormPage'));
+const RecurringTransactionsPage = lazy(() => import('./pages/transactions/RecurringTransactionsPage'));
 const CategoriesPage = lazy(() => import('./pages/categories/CategoriesPage'));
 const BudgetsPage = lazy(() => import('./pages/budgets/BudgetsPage'));
 const BudgetFormPage = lazy(() => import('./pages/budgets/BudgetFormPage'));
 const BudgetDetailPage = lazy(() => import('./pages/budgets/BudgetDetailPage'));
+const GoalsPage = lazy(() => import('./pages/goals/GoalsPage'));
+const GoalFormPage = lazy(() => import('./pages/goals/GoalFormPage'));
 const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
 const PrivacyPage = lazy(() => import('./pages/settings/PrivacyPage'));
@@ -90,11 +93,15 @@ export default function App() {
                 <Route path="transactions" element={<TransactionsPage />} />
                 <Route path="transactions/new" element={<TransactionFormPage />} />
                 <Route path="transactions/:id/edit" element={<TransactionFormPage />} />
+                <Route path="recurring-transactions" element={<RecurringTransactionsPage />} />
                 <Route path="categories" element={<CategoriesPage />} />
                 <Route path="budgets" element={<BudgetsPage />} />
                 <Route path="budgets/new" element={<BudgetFormPage />} />
                 <Route path="budgets/:id" element={<BudgetDetailPage />} />
                 <Route path="budgets/:id/edit" element={<BudgetFormPage />} />
+                <Route path="goals" element={<GoalsPage />} />
+                <Route path="goals/new" element={<GoalFormPage />} />
+                <Route path="goals/:id/edit" element={<GoalFormPage />} />
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="notifications/preferences" element={<NotificationPreferencesPage />} />

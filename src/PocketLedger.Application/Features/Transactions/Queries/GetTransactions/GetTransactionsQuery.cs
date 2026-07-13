@@ -17,6 +17,7 @@ public class GetTransactionsQuery : IRequest<PagedResult<TransactionDto>>
     public TransactionType? Type { get; set; }
     public int? AccountId { get; set; }
     public int? CategoryId { get; set; }
+    public int? TagId { get; set; }
     public decimal? MinAmount { get; set; }
     public decimal? MaxAmount { get; set; }
     public string? Payee { get; set; }

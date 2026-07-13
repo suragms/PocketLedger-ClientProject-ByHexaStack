@@ -12,12 +12,14 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRepository<Tag> _tagRepo;
     private readonly IMapper _mapper;
 
-    public CreateTransactionCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IMapper mapper)
+    public CreateTransactionCommandHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IRepository<Tag> tagRepo, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _currentUserService = currentUserService;
+        _tagRepo = tagRepo;
         _mapper = mapper;
     }
 
@@ -52,6 +54,16 @@ public class CreateTransactionCommandHandler : IRequestHandler<CreateTransaction
             CreatedAt = DateTime.UtcNow,
             CreatedBy = _currentUserService.UserId
         };
+
+        if (request.TagIds?.Count > 0)
+        {
+            foreach (var tagId in request.TagIds)
+            {
+                var tag = await _tagRepo.GetByIdAsync(tagId, cancellationToken);
+                if (tag != null && tag.UserId == _currentUserService.UserId)
+                    transaction.TransactionTags.Add(new TransactionTag { TagId = tagId });
+            }
+        }
 
         await _unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
 
