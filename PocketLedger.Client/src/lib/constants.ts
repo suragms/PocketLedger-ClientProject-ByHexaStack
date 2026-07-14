@@ -1,4 +1,12 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const getApiBaseUrl = () => {
+  const url = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
+  if (url.startsWith('http')) {
+    return url.endsWith('/api') ? url : `${url.replace(/\/$/, '')}/api`;
+  }
+  return url;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const ACCOUNT_TYPES = [
   { value: 0, label: 'Personal', icon: 'UserIcon', color: '#6366f1' },
