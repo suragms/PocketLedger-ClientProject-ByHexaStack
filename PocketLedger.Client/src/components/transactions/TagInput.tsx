@@ -4,7 +4,6 @@ import { tagsApi } from '../../api/tags.api';
 import { cn } from '../../lib/utils';
 import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import type { Tag } from '../../types';
 
 interface TagInputProps {
   value: number[];

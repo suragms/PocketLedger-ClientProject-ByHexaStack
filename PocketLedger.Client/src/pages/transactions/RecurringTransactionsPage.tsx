@@ -24,7 +24,6 @@ import {
   PlayIcon,
   PencilSquareIcon,
   TrashIcon,
-  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import type { RecurringTransaction } from '../../types';
 
@@ -69,7 +68,7 @@ export default function RecurringTransactionsPage() {
   const categories = (categoriesData?.data || []);
   const recurringList = recurringData?.data || [];
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm({
     resolver: zodResolver(recurringTransactionSchema),
     defaultValues: {
       currency: 'USD',

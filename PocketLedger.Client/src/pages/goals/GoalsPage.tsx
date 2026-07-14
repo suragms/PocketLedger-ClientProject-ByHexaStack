@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { goalsApi } from '../../api/goals.api';
-import { accountsApi } from '../../api/accounts.api';
 import { Card, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -42,11 +41,6 @@ export default function GoalsPage() {
     queryFn: () => goalsApi.getAll(),
   });
 
-  const { data: accountsData } = useQuery({
-    queryKey: ['accounts'],
-    queryFn: () => accountsApi.getAll(),
-  });
-
   const deleteMutation = useMutation({
     mutationFn: (id: number) => goalsApi.delete(id),
     onSuccess: () => {
@@ -58,7 +52,6 @@ export default function GoalsPage() {
   });
 
   const goals = data?.data || [];
-  const accounts = accountsData?.data || [];
 
   const filteredGoals = useMemo(() => {
     switch (activeTab) {

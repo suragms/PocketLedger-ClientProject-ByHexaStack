@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsApi } from '../../api/transactions.api';
 import { accountsApi } from '../../api/accounts.api';
 import { categoriesApi } from '../../api/categories.api';
-import { transactionSchema, transferSchema, type TransferInput } from '../../lib/validators';
+import { transactionSchema, type TransferInput } from '../../lib/validators';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
@@ -170,7 +170,7 @@ export default function TransactionFormPage() {
 
   const onSubmit = (data: any) => {
     if (selectedType === 2) {
-      const vals = getValues();
+      const vals = getValues() as any;
       transferMutation.mutate({
         amount: vals.amount,
         currency: vals.currency,
@@ -188,7 +188,7 @@ export default function TransactionFormPage() {
     if (isEdit) {
       mutation.mutate(data);
     } else if (selectedType === 2) {
-      const vals = getValues();
+      const vals = getValues() as any;
       transferMutation.mutate({
         amount: vals.amount,
         currency: vals.currency,
@@ -292,7 +292,7 @@ export default function TransactionFormPage() {
                 placeholder="Select destination"
                 autoComplete="off"
                 options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
-                {...register('targetAccountId')}
+                {...(register as any)('targetAccountId')}
               />
             </div>
           ) : (

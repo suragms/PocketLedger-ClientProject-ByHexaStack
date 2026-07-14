@@ -37,7 +37,7 @@ export default function GoalFormPage() {
 
   const { data: accountsData } = useQuery({
     queryKey: ['accounts-dropdown'],
-    queryFn: () => accountsApi.getAll(),
+    queryFn: () => accountsApi.getAll({ page: 1, pageSize: 100 }),
   });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
@@ -73,7 +73,7 @@ export default function GoalFormPage() {
     },
   });
 
-  const accounts = accountsData?.data || [];
+  const accounts = accountsData?.data?.items || [];
 
   if (isEdit && loadingExisting) {
     return (

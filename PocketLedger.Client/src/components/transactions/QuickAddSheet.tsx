@@ -57,7 +57,7 @@ export default function QuickAddSheet({ isOpen, onClose }: Props) {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [customCategoryColor, setCustomCategoryColor] = useState('#6366f1');
-  const [customCategoryIcon, setCustomCategoryIcon] = useState('folder');
+  const customCategoryIcon = 'folder';
 
   const createCategoryMutation = useMutation({
     mutationFn: categoriesApi.create,

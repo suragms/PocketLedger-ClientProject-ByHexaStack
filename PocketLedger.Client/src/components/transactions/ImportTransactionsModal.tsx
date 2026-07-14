@@ -116,11 +116,6 @@ export default function ImportTransactionsModal({ onClose }: { onClose: () => vo
 
   const columnFields = ['Date', 'Description', 'Amount', 'Type', 'Category'];
 
-  const getLabel = (colIdx: number) => {
-    if (headers[colIdx]) return headers[colIdx];
-    return `Column ${colIdx + 1}`;
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
@@ -197,7 +192,7 @@ export default function ImportTransactionsModal({ onClose }: { onClose: () => vo
               <p>{headers.join('  →  ')}</p>
             </div>
             <div className="space-y-4">
-              {columnFields.map((field, idx) => (
+              {columnFields.map((field) => (
                 <div key={field}>
                   <label className="block text-sm font-medium mb-1.5">{field}</label>
                   <select
