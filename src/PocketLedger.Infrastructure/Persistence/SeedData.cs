@@ -58,8 +58,11 @@ public static class SeedData
                 await roleManager.CreateAsync(new Role { Name = role, Description = $"{role} role" });
         }
 
-        // Seed Admin User (surag@admin.com)
-        var adminEmail = "surag@admin.com";
+        // Seed Admin User (configured via Admin:Email / ADMIN_EMAIL and Admin:Password / ADMIN_PASSWORD)
+        var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+        var adminEmail = config["Admin:Email"] ?? "surag@admin.com";
+        var adminPassword = config["Admin:Password"] ?? "Surag2000";
+
         var adminUser = await userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
@@ -76,7 +79,7 @@ public static class SeedData
                 CreatedAt = DateTime.UtcNow,
             };
 
-            var result = await userManager.CreateAsync(user, "Surag2000");
+            var result = await userManager.CreateAsync(user, adminPassword);
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
