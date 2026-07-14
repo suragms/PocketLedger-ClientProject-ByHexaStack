@@ -41,6 +41,8 @@ appsettings.Development.json
 *.env
 .env.local
 .env.*.local
+!PocketLedger.Client/.env
+!PocketLedger.Client/.env.production
 
 # Logs
 *.log
