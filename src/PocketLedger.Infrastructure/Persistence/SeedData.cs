@@ -17,6 +17,33 @@ public static class SeedData
 
         await context.Database.MigrateAsync();
 
+        // Clean up duplicate "Primary Account" entries if they exist
+        var primaryAccounts = await context.Accounts
+            .Where(a => a.Name == "Primary Account")
+            .OrderBy(a => a.Id)
+            .ToListAsync();
+
+        if (primaryAccounts.Count > 1)
+        {
+            var keepAccount = primaryAccounts[0];
+            var duplicates = primaryAccounts.Skip(1).ToList();
+            
+            foreach (var duplicate in duplicates)
+            {
+                var transactionsToUpdate = await context.Transactions
+                    .Where(t => t.AccountId == duplicate.Id)
+                    .ToListAsync();
+                    
+                foreach (var transaction in transactionsToUpdate)
+                {
+                    transaction.AccountId = keepAccount.Id;
+                }
+            }
+            
+            context.Accounts.RemoveRange(duplicates);
+            await context.SaveChangesAsync();
+        }
+
         string[] roles = ["Admin", "User"];
         foreach (var role in roles)
         {

@@ -292,7 +292,7 @@ export default function TransactionFormPage() {
                 placeholder="Select destination"
                 autoComplete="off"
                 options={accounts.map((a: any) => ({ value: a.id, label: a.name }))}
-                {...register('targetAccountId', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+                {...register('targetAccountId')}
               />
             </div>
           ) : (
@@ -320,7 +320,7 @@ export default function TransactionFormPage() {
                   placeholder="Select category"
                   autoComplete="off"
                   options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-                  {...register('categoryId', { valueAsNumber: true, setValueAs: (v) => v === '' ? null : Number(v) })}
+                  {...register('categoryId')}
                 />
               </div>
             </div>

@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+const emptyToNull = (val: unknown) => {
+  if (val === '' || val === null || val === undefined) return null;
+  if (typeof val === 'number' && isNaN(val)) return null;
+  return val;
+};
+
 export const loginSchema = z.object({
   email: z.string().email('A valid email is required'),
   password: z.string().min(1, 'Password is required'),
@@ -116,7 +122,7 @@ export const transactionSchema = z.object({
   reference: z.string().max(100).optional(),
   paymentMethod: z.coerce.number().min(0).max(6).default(0),
   accountId: z.coerce.number().positive('Account is required'),
-  categoryId: z.coerce.number().positive().optional().nullable(),
+  categoryId: z.preprocess(emptyToNull, z.coerce.number().positive().optional().nullable()),
   tagIds: z.array(z.number()).optional(),
 });
 
@@ -139,7 +145,7 @@ export const categorySchema = z.object({
   icon: z.string().default('folder'),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Must be a valid hex color').default('#6366f1'),
   type: z.coerce.number().min(0).max(2).default(2),
-  parentId: z.coerce.number().optional().nullable(),
+  parentId: z.preprocess(emptyToNull, z.coerce.number().optional().nullable()),
 });
 
 export const budgetSchema = z.object({
@@ -148,11 +154,11 @@ export const budgetSchema = z.object({
   currency: z.string().length(3).default('USD'),
   period: z.coerce.number().min(0).max(3),
   startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().optional().nullable(),
-  alertThreshold: z.coerce.number().min(0).max(100).optional().nullable(),
+  endDate: z.preprocess(emptyToNull, z.string().optional().nullable()),
+  alertThreshold: z.preprocess(emptyToNull, z.coerce.number().min(0).max(100).optional().nullable()),
   notifyOnAlert: z.boolean().default(true),
   notifyOnExceed: z.boolean().default(true),
-  categoryId: z.coerce.number().optional().nullable(),
+  categoryId: z.preprocess(emptyToNull, z.coerce.number().optional().nullable()),
 });
 
 export type AccountInput = z.infer<typeof accountSchema>;
@@ -176,7 +182,7 @@ export const goalSchema = z.object({
   targetAmount: z.coerce.number().positive('Target amount must be greater than 0'),
   currentAmount: z.coerce.number().min(0).default(0),
   targetDate: z.string().min(1, 'Target date is required'),
-  linkedAccountId: z.coerce.number().optional().nullable(),
+  linkedAccountId: z.preprocess(emptyToNull, z.coerce.number().optional().nullable()),
 });
 
 export type GoalInput = z.infer<typeof goalSchema>;
@@ -223,9 +229,9 @@ export const recurringTransactionSchema = z.object({
   payee: z.string().max(200).optional(),
   frequencyDays: z.coerce.number().positive('Frequency must be at least 1 day'),
   nextDueDate: z.string().min(1, 'Next due date is required'),
-  endDate: z.string().optional().nullable(),
+  endDate: z.preprocess(emptyToNull, z.string().optional().nullable()),
   accountId: z.coerce.number().positive('Account is required'),
-  categoryId: z.coerce.number().positive().optional().nullable(),
+  categoryId: z.preprocess(emptyToNull, z.coerce.number().positive().optional().nullable()),
 });
 
 export type RecurringTransactionInput = z.infer<typeof recurringTransactionSchema>;

@@ -45,6 +45,7 @@ const DRAG_THRESHOLD = 150;
 export default function QuickAddSheet({ isOpen, onClose }: Props) {
   const queryClient = useQueryClient();
   const amountRef = useRef<HTMLInputElement>(null);
+  const didCreateAccountRef = useRef(false);
 
   const [type, setType] = useState<number>(1);
   const [amount, setAmount] = useState('');
@@ -137,13 +138,17 @@ export default function QuickAddSheet({ isOpen, onClose }: Props) {
   }, [isOpen, resetForm]);
 
   useEffect(() => {
-    if (accounts.length > 0 && accountId === null) {
-      setAccountId(accounts[0].id);
+    if (accounts.length > 0) {
+      didCreateAccountRef.current = false;
+      if (accountId === null) {
+        setAccountId(accounts[0].id);
+      }
     }
   }, [accounts, accountId]);
 
   useEffect(() => {
-    if (isOpen && accountsData && accounts.length === 0 && !createAccountMutation.isPending) {
+    if (isOpen && accountsData && accounts.length === 0 && !createAccountMutation.isPending && !didCreateAccountRef.current) {
+      didCreateAccountRef.current = true;
       createAccountMutation.mutate({
         name: 'Primary Account',
         type: 3, // Cash

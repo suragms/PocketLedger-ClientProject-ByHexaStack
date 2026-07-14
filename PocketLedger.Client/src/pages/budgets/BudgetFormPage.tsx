@@ -201,10 +201,7 @@ export default function BudgetFormPage() {
             placeholder="All categories"
             autoComplete="off"
             options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-            {...register('categoryId', {
-              valueAsNumber: true,
-              setValueAs: (v) => (v === '' ? null : Number(v)),
-            })}
+            {...register('categoryId')}
           />
 
           <Input
@@ -214,10 +211,7 @@ export default function BudgetFormPage() {
             placeholder="80"
             autoComplete="off"
             error={errors.alertThreshold?.message}
-            {...register('alertThreshold', {
-              valueAsNumber: true,
-              setValueAs: (v) => (v === '' ? null : Number(v)),
-            })}
+            {...register('alertThreshold')}
           />
 
           <div>

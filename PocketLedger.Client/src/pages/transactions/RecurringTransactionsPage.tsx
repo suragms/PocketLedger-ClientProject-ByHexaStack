@@ -340,7 +340,7 @@ export default function RecurringTransactionsPage() {
                 label="Category"
                 placeholder="Select category"
                 options={categories.map((c: any) => ({ value: c.id, label: c.name }))}
-                {...register('categoryId', { valueAsNumber: true, setValueAs: (v: any) => v === '' ? null : Number(v) })}
+                {...register('categoryId')}
               />
             </div>
           </SectionCard>
