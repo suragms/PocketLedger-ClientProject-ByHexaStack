@@ -15,7 +15,6 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import NotificationBell from '../notifications/NotificationBell';
-import QuickAddSheet from '../transactions/QuickAddSheet';
 
 const routeTitles: Record<string, string> = {
   '/': 'Dashboard',
@@ -77,7 +76,7 @@ export default function Header() {
     return () => window.removeEventListener('keydown', handler);
   }, [navigate, location.pathname]);
 
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
+
 
   const handleLogout = () => {
     dispatch(logout());
@@ -162,12 +161,21 @@ export default function Header() {
           <div className="flex-1" />
 
           <button
-            onClick={() => setShowQuickAdd(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all min-w-[44px] min-h-[44px] justify-center"
-            aria-label="Add transaction"
+            onClick={() => navigate('/transactions/new?type=0')}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95 transition-all px-3 py-2 text-sm font-medium min-w-[44px] min-h-[44px] justify-center"
+            aria-label="Add Income"
           >
             <PlusIcon className="h-4 w-4" aria-hidden="true" />
-            <span>Add</span>
+            <span>Income</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/transactions/new?type=1')}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white active:scale-95 transition-all px-3 py-2 text-sm font-medium min-w-[44px] min-h-[44px] justify-center"
+            aria-label="Add Expense"
+          >
+            <PlusIcon className="h-4 w-4" aria-hidden="true" />
+            <span>Expense</span>
           </button>
 
           <button
@@ -234,7 +242,7 @@ export default function Header() {
         </>
       )}
 
-      <QuickAddSheet isOpen={showQuickAdd} onClose={() => setShowQuickAdd(false)} />
+
     </header>
   );
 }

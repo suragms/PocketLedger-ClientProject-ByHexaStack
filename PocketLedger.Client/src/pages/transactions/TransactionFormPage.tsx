@@ -112,6 +112,13 @@ export default function TransactionFormPage() {
     }
   }, [existing, reset]);
 
+  const typeParam = searchParams.get('type');
+  useEffect(() => {
+    if (typeParam !== null && !isEdit) {
+      setValue('type', Number(typeParam));
+    }
+  }, [typeParam, setValue, isEdit]);
+
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty) {

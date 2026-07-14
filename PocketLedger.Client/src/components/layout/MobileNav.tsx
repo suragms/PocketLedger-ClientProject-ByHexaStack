@@ -6,7 +6,7 @@ import {
   ArrowPathIcon,
   PlusIcon,
   ChartBarIcon,
-  FolderIcon,
+  CurrencyDollarIcon,
   Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 import { cn } from '../../lib/utils';
@@ -16,7 +16,7 @@ import QuickAddSheet from '../transactions/QuickAddSheet';
 const navigation = [
   { name: 'Home', href: '/', icon: HomeIcon },
   { name: 'History', href: '/transactions', icon: ArrowPathIcon },
-  { name: 'Categories', href: '/categories', icon: FolderIcon },
+  { name: 'Budget', href: '/budgets', icon: CurrencyDollarIcon },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
