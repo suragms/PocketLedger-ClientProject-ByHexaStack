@@ -15,7 +15,14 @@ public static class SeedData
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
 
-        await context.Database.MigrateAsync();
+        if (context.Database.IsSqlite())
+        {
+            await context.Database.MigrateAsync();
+        }
+        else
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
 
         // Clean up duplicate "Primary Account" entries if they exist
         var primaryAccounts = await context.Accounts
