@@ -366,7 +366,7 @@ public static class SeedData
         Dictionary<string, Category> categories)
     {
         var now = DateTime.UtcNow;
-        var monthStart = new DateTime(now.Year, now.Month, 1);
+        var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var budgets = new List<Budget>
         {

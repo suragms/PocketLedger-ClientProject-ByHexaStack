@@ -21,6 +21,10 @@ using Serilog;
 using System.IO.Compression;
 using System.Text;
 
+// Allow Npgsql to handle DateTime values with Kind=Unspecified by treating them as UTC.
+// This prevents "Cannot write DateTime with Kind=Unspecified" errors when using PostgreSQL.
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()

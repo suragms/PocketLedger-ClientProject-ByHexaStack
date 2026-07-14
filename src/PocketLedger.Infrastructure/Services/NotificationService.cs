@@ -67,7 +67,7 @@ public class NotificationService : INotificationService
     public async Task SendMonthlySummaryAsync(string userId, CancellationToken ct = default)
     {
         var end = DateTime.UtcNow;
-        var start = new DateTime(end.Year, end.Month, 1);
+        var start = new DateTime(end.Year, end.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var income = await _unitOfWork.Transactions.GetTotalByTypeAsync(userId, TransactionType.Income, start, end, ct);
         var expense = await _unitOfWork.Transactions.GetTotalByTypeAsync(userId, TransactionType.Expense, start, end, ct);
@@ -87,9 +87,9 @@ public class NotificationService : INotificationService
             var (start, end) = budget.Period switch
             {
                 BudgetPeriod.Weekly => (now.AddDays(-7), now),
-                BudgetPeriod.Monthly => (new DateTime(now.Year, now.Month, 1), now),
-                BudgetPeriod.Quarterly => (new DateTime(now.Year, ((now.Month - 1) / 3) * 3 + 1, 1), now),
-                BudgetPeriod.Yearly => (new DateTime(now.Year, 1, 1), now),
+                BudgetPeriod.Monthly => (new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc), now),
+                BudgetPeriod.Quarterly => (new DateTime(now.Year, ((now.Month - 1) / 3) * 3 + 1, 1, 0, 0, 0, DateTimeKind.Utc), now),
+                BudgetPeriod.Yearly => (new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc), now),
                 _ => (budget.StartDate, budget.EndDate ?? now),
             };
 
